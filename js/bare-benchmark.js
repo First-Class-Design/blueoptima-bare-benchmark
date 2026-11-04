@@ -1,0 +1,684 @@
+(function () {
+  "use strict";
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+  const fmt1 = n => (Math.round(n * 10) / 10).toFixed(1);
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+
+  const EUROPE = ["France", "Germany", "United Kingdom", "UK", "Netherlands", "Switzerland", "Sweden", "Finland", "Spain", "Italy", "Ireland", "Denmark", "Norway", "Poland", "Belgium", "Austria", "Portugal"];
+  const regionOf = o => (o === "US" || o === "United States" || o === "USA") ? "US" : o === "China" ? "China" : EUROPE.includes(o) ? "Europe" : "Other";
+  const originLabel = o => (o === "US" ? "United States" : o);
+
+  /* ================= Derived data ================= */
+  let models = [], byName = new Map(), stats = {}, top = 0, count = 0, axisMax = 25, issues = [];
+  const tieBand = () => Math.max(0, Number(BARE.tieBand) || 0);
+
+  function derive() {
+    issues = [];
+    const seen = new Set();
+    models = [];
+    BARE.models.forEach((raw, i) => {
+      const m = { ...raw, name: String(raw.name || "").trim() };
+      m.success = raw.success === null || raw.success === "" ? NaN : Number(raw.success);
+      m.generation = raw.generation === null || raw.generation === "" ? NaN : Number(raw.generation);
+      m.effort = raw.effort === null || raw.effort === "" ? NaN : Number(raw.effort);
+      if (!m.name || !isFinite(m.success) || m.success < 0 || m.success > 100) { issues.push(`Row ${i + 1}${m.name ? ` (${m.name})` : ""} needs a name and a success rate between 0 and 100, so it’s hidden from the page.`); return; }
+      if (seen.has(m.name.toLowerCase())) { issues.push(`“${m.name}” appears more than once. Only the first is shown.`); return; }
+      seen.add(m.name.toLowerCase());
+      m.developer = m.developer || "Unknown"; m.origin = m.origin || "Unknown"; m.weights = m.weights === "Open" ? "Open" : "Closed";
+      m.region = regionOf(m.origin);
+      models.push(m);
+    });
+    // Rows in bare-config.js that can't be shown; flagged here so they're easy to spot.
+    issues.forEach(msg => console.warn(`BARE data: ${msg}`));
+    models.sort((a, b) => b.success - a.success || a.name.localeCompare(b.name));
+    models.forEach((m, i) => {
+      m.rank = i > 0 && m.success === models[i - 1].success ? models[i - 1].rank : i + 1;
+      m.tied = models.filter(o => o.success === m.success).length > 1;
+      m.id = i;
+    });
+    byName = new Map(models.map(m => [m.name.toLowerCase(), m]));
+    count = models.length;
+    top = count ? models[0].success : 0;
+    const tb = tieBand(), top20 = models.slice(0, 20);
+    axisMax = Math.max(25, Math.ceil(top + 1));
+    const d = new Date(BARE.updated + "T00:00:00");
+    stats = {
+      top: fmt1(top), count, tieBand: tb, axisMax,
+      updated: isNaN(d) ? BARE.updated : d.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" }),
+      nearTop: models.filter(m => top - m.success <= tb + 1e-9).length,
+      nearTop2: models.filter(m => top - m.success <= 2 + 1e-9).length,
+      genHigh: models.filter(m => m.generation >= 90).length,
+      chinaTop20: top20.filter(m => m.origin === "China").length,
+      chinaCount: models.filter(m => m.origin === "China").length,
+      openTop20: top20.filter(m => m.weights === "Open").length,
+      devCount: new Set(models.map(m => m.developer)).size
+    };
+  }
+  // {token} fills from stats; {score:Model name} fills with that model's success rate.
+  const fill = s => String(s ?? "")
+    .replace(/\{score:([^}]+)\}/g, (_, n) => { const m = byName.get(n.trim().toLowerCase()); return m ? fmt1(m.success) : `{score:${n}}`; })
+    .replace(/\{(\w+)\}/g, (_, k) => (k in stats ? stats[k] : `{${k}}`));
+
+  /* ================= State ================= */
+  let selected = null, compare = null;
+  const chart = { mode: "field", focusDev: null, hoverDev: null, zoom: 1, pan: 0.5 };
+
+  /* ================= Labels & templates ================= */
+  BARE.labels = BARE.labels || {};
+  const lab = (k, vars = {}) => fillVars(BARE.labels[k] ?? "", vars, true);
+  function applyLabels() {
+    $$("[data-label]").forEach(el => (el.textContent = lab(el.dataset.label)));
+    $$("[data-label-ph]").forEach(el => (el.placeholder = lab(el.dataset.labelPh)));
+  }
+  // Fill per-item {vars} first, then page-wide {tokens}. Plain = strip HTML.
+  function fillVars(s, vars, plain) {
+    let out = fill(String(s ?? "").replace(/\{(\w+)\}/g, (m, k) => (k in vars ? vars[k] : m)));
+    return plain ? out.replace(/<[^>]+>/g, "") : out;
+  }
+  // An element holding the BARE.text template `key`, filled with per-item vars.
+  function tpl(tag, key, vars = {}, attrs = "") {
+    return `<${tag}${attrs ? " " + attrs : ""}>${fillVars(BARE.text[key], vars)}</${tag}>`;
+  }
+
+  /* ================= Static text ================= */
+  function renderText() {
+    // A key missing from BARE.text leaves the element's own text in place.
+    $$("[data-text]").forEach(el => { const t = BARE.text[el.dataset.text]; if (t != null) el.innerHTML = fill(t); });
+    // Native Webflow text keeps its calculated numbers in <span data-value="token">, so they follow the data.
+    $$("[data-value]").forEach(el => { const t = `{${el.dataset.value}}`, v = fill(t); if (v !== t) el.textContent = v; });
+    applyLabels();
+    $$("[data-link]").forEach(a => (a.href = BARE.links[a.dataset.link] || "#"));
+    // Webflow component text (eyebrow badges, buttons) comes from props, so it can't carry
+    // data-text. Text that is exactly one of these placeholders is filled from BARE.text instead.
+    $$("main *").forEach(el => {
+      const key = el.children.length ? null : PLACEHOLDERS[el.textContent.trim()];
+      if (key && BARE.text[key] != null) el.textContent = fillVars(BARE.text[key], {}, true);
+    });
+  }
+  const PLACEHOLDERS = { "{date}": "dateline", "{btn-txt}": "ctaButton" };
+
+  /* ================= Colour ================= */
+  const colour = v => `var(${v})`;
+  const schemes = {
+    region: { key: "region", items: [["US", "--us", "United States"], ["China", "--china", "China"], ["Europe", "--europe", "Europe"], ["Other", "--other", "Other"]] },
+    weights: { key: "weights", items: [["Closed", "--closed", "Closed"], ["Open", "--open", "Open-weight"]] }
+  };
+  let scheme = "region";
+  const regionColour = m => colour((schemes.region.items.find(i => i[0] === m.region) || [0, "--other"])[1]);
+  const dotColour = m => { const s = schemes[scheme]; const it = s.items.find(i => i[0] === m[s.key]); return it ? colour(it[1]) : colour("--other"); };
+  function renderLegend() {
+    const s = schemes[scheme];
+    $("#legend").innerHTML = s.items.filter(i => models.some(m => m[s.key] === i[0]))
+      .map(i => `<span><i style="background:${colour(i[1])}"></i>${i[2]} (${models.filter(m => m[s.key] === i[0]).length})</span>`).join("");
+  }
+
+  /* =====================================================================
+     CHART: one set of dots that rearranges between four views
+     ===================================================================== */
+  const svg = $("#chart"), wrapEl = $("#chart-wrap"), tooltip = $("#tooltip");
+  const L = { ax: $(".ax-layer", svg), band: $(".band-layer", svg), dots: $(".dots", svg), marks: $(".marks-layer", svg) };
+  let geo = null, R = 6;
+
+  function niceTicks(lo, hi, target = 6) {
+    const span = hi - lo || 1, raw = span / target;
+    const steps = [0.05, 0.1, 0.2, 0.25, 0.5, 1, 2, 2.5, 5, 10, 20, 25];
+    const step = steps.find(s => s >= raw) || 25;
+    const out = [];
+    for (let v = Math.ceil(lo / step - 1e-9) * step; v <= hi + 1e-9; v += step) out.push(Math.round(v * 1000) / 1000);
+    return out;
+  }
+  const extent = (arr, f) => [Math.min(...arr.map(f)), Math.max(...arr.map(f))];
+
+  function swarm(items, xOf, step, maxSpread) {
+    const placed = [];
+    items.forEach(m => {
+      const cx = xOf(m);
+      let k = 0, cy = 0;
+      for (;;) {
+        cy = k === 0 ? 0 : (k % 2 ? 1 : -1) * Math.ceil(k / 2) * (step * 0.88);
+        if (maxSpread && Math.abs(cy) > maxSpread) { cy = clamp(cy, -maxSpread, maxSpread); break; }
+        if (!placed.some(p => Math.abs(p.cx - cx) < step && Math.hypot(p.cx - cx, p.cy - cy) < step)) break;
+        k++;
+      }
+      placed.push({ m, cx, cy });
+    });
+    return placed;
+  }
+
+  function computeGeo() {
+    const W = Math.max(300, wrapEl.clientWidth), small = W < 640;
+    R = small ? 4.6 : 6.2;
+    const step = R * 2 + 1.5, pos = new Map(), tb = tieBand();
+    const focus = chart.focusDev ? models.filter(m => m.developer === chart.focusDev) : null;
+    let H, ax = "", band = "", x, y, sub = "";
+    // Zoom shows a slice of the full x range. Dots are stacked at the zoomed scale, so dragging only slides them.
+    const z = chart.zoom;
+    let full = [0, 1], plotW = 1, xVal = m => m.success, a = 0, b = 1, vx = v => v;
+    const setView = (lo, hi, left, width) => {
+      const span = (hi - lo) / z, start = clamp(lo + (hi - lo) * chart.pan - span / 2, lo, hi - span);
+      full = [lo, hi]; plotW = width; a = start; b = start + span;
+      x = v => left + (v - a) / (b - a) * width;
+      vx = v => (v - lo) / (hi - lo) * width * z;
+    };
+    const isOff = (px, left, right) => px < left - R || px > right + R;
+    const xTicks = (ticks, x0, x1, yy, fmt, title, grid, yTop) => {
+      let s = "";
+      ticks.forEach(t => {
+        if (grid) s += `<line class="grid" x1="${x(t)}" x2="${x(t)}" y1="${yTop}" y2="${yy}"></line>`;
+        s += `<text x="${x(t)}" y="${yy + 18}" text-anchor="middle">${fmt(t)}</text>`;
+      });
+      s += `<line class="base" x1="${x0}" x2="${x1}" y1="${yy}" y2="${yy}"></line>`;
+      s += `<text class="title" x="${x1}" y="${yy + 38}" text-anchor="end">${title}</text>`;
+      return s;
+    };
+
+    if (chart.mode === "field") {
+      const mL = 14, mR = 14, mT = 46;
+      let lo = 0, hi = axisMax;
+      if (focus) { const [a, b] = extent(focus, m => m.success); lo = Math.max(0, Math.floor(a - 1.5)); hi = Math.min(100, Math.ceil(b + 1.5)); if (hi - lo < 4) { lo = Math.max(0, lo - 2); hi = hi + 2; } }
+      setView(lo, hi, mL, W - mL - mR);
+      const vis = models.filter(m => m.success >= lo - 1e-9 && m.success <= hi + 1e-9);
+      const placed = swarm(vis, m => vx(m.success), step);
+      const minY = Math.min(0, ...placed.map(p => p.cy)), maxY = Math.max(0, ...placed.map(p => p.cy));
+      H = Math.max(small ? 240 : 300, Math.round(maxY - minY + mT + 70 + R * 2));
+      const mid = mT + (H - mT - 56 - (maxY - minY)) / 2 - minY;
+      placed.forEach(p => { const px = x(p.m.success); pos.set(p.m.id, { x: px, y: mid + p.cy, off: isOff(px, mL, W - mR) }); });
+      models.forEach(m => { if (!pos.has(m.id)) pos.set(m.id, { x: m.success < lo ? x(lo) - 20 : x(hi) + 20, y: mid, off: true }); });
+      const axY = H - 46;
+      ax = xTicks(niceTicks(a, b, small ? 5 : 8), x(a), x(b), axY, t => `${t}%`, "Refactoring success rate", true, mT - 26);
+      if (top >= a && top - tb <= b) {
+        const left = Math.max(mL, x(Math.max(a, top - tb)) - R - 3), right = Math.min(W - mR, x(Math.min(b, top)) + R + 3), inside = left < 96;
+        band = `<rect x="${left}" y="${mT - 26}" width="${right - left}" height="${axY - mT + 26}" rx="10"></rect><text x="${inside ? left + 8 : left - 7}" y="${mT - 10}" text-anchor="${inside ? "start" : "end"}">Leading group</text>`;
+      }
+      sub = "subField";
+    }
+
+    if (chart.mode === "developer") {
+      const devs = [...new Set(models.map(m => m.developer))].map(d => ({ d, list: models.filter(m => m.developer === d) }))
+        .map(o => ({ ...o, best: Math.max(...o.list.map(m => m.success)) })).sort((a, b) => b.best - a.best);
+      const rowH = small ? 30 : 34, mL = small ? 104 : 168, mR = 14, mT = 30;
+      H = mT + devs.length * rowH + 50;
+      setView(0, axisMax, mL, W - mL - mR);
+      devs.forEach((o, i) => {
+        const cy = mT + i * rowH + rowH / 2;
+        const placed = swarm(o.list, m => vx(m.success), step * 0.82, rowH / 2 - R);
+        placed.forEach(p => { const px = x(p.m.success); pos.set(p.m.id, { x: px, y: cy + p.cy * 0.85, off: isOff(px, mL, W - mR) }); });
+        const isF = chart.focusDev === o.d;
+        ax += `${i % 2 === 0 ? `<rect class="rowbg" x="0" y="${cy - rowH / 2}" width="${W}" height="${rowH}" rx="6"></rect>` : ""}
+          <text class="rowlabel" data-dev="${esc(o.d)}" x="${mL - 14}" y="${cy + 4}" text-anchor="end"${isF ? ' style="fill:var(--accent)"' : ""}>${esc(o.d)} <tspan class="rowcount">${o.list.length}</tspan></text>`;
+      });
+      const axY = H - 40;
+      ax += xTicks(niceTicks(a, b, small ? 5 : 8), x(a), x(b), axY, t => `${t}%`, "Refactoring success rate", true, mT);
+      if (top >= a && top - tb <= b) {
+        const left = Math.max(mL, x(Math.max(a, top - tb)) - R - 3), right = Math.min(W - mR, x(Math.min(b, top)) + R + 3);
+        band = `<rect x="${left}" y="${mT - 4}" width="${right - left}" height="${axY - mT + 4}" rx="10"></rect>`;
+      }
+      sub = "subDeveloper";
+    }
+
+    if (chart.mode === "returned" || chart.mode === "effort") {
+      const key = chart.mode === "returned" ? "generation" : "effort";
+      const has = models.filter(m => isFinite(m[key]));
+      const src = focus && focus.some(m => isFinite(m[key])) ? focus.filter(m => isFinite(m[key])) : has;
+      const mL = small ? 42 : 58, mR = 18, mT = 18, mB = 54;
+      H = small ? 360 : 460;
+      let [xa, xb] = extent(src, m => m[key]), [ya, yb] = focus ? extent(src, m => m.success) : [0, axisMax];
+      const px = (xb - xa) * 0.08 || (key === "effort" ? 0.1 : 2), py = focus ? Math.max(1, (yb - ya) * 0.15) : 0;
+      xa -= px; xb += px;
+      if (key === "generation") xb = Math.min(100.5, xb);
+      ya = Math.max(0, ya - py); yb = focus ? Math.min(100, yb + py) : yb;
+      setView(xa, xb, mL, W - mL - mR);
+      xVal = m => m[key];
+      y = v => mT + (1 - (v - ya) / (yb - ya)) * (H - mT - mB);
+      models.forEach(m => {
+        if (!isFinite(m[key])) { pos.set(m.id, { x: x((xa + xb) / 2), y: H + 20, off: true }); return; }
+        const off = m[key] < a || m[key] > b || m.success < ya || m.success > yb;
+        pos.set(m.id, { x: clamp(x(m[key]), mL - 20, W + 20), y: clamp(y(m.success), -20, H + 20), off });
+      });
+      const yT = niceTicks(ya, yb, small ? 5 : 6);
+      yT.forEach(t => { ax += `<line class="grid" x1="${mL}" x2="${W - mR}" y1="${y(t)}" y2="${y(t)}"></line><text x="${mL - 8}" y="${y(t) + 4}" text-anchor="end">${t}%</text>`; });
+      ax += `<text class="title" x="${mL}" y="${mT - 4}" text-anchor="start" transform="translate(0,-4)">Refactoring success</text>`;
+      ax += xTicks(niceTicks(a, b, small ? 4 : 7), x(a), x(b), H - mB, key === "generation" ? t => `${t}%` : t => `${t}h`, key === "generation" ? "Files returned" : "Avg. coding effort per successful fix (hours)", true, mT);
+      const by = y(Math.min(yb, top)), by2 = y(Math.max(ya, top - tb));
+      if (top >= ya) band = `<rect x="${mL}" y="${by - R - 3}" width="${W - mL - mR}" height="${by2 - by + 2 * R + 6}" rx="8"></rect><text x="${W - mR - 8}" y="${by - R - 8}" text-anchor="end">Leading group</text>`;
+      sub = key === "generation" ? "subReturned" : "subEffort";
+    }
+    const subVars = focus ? { focusCount: focus.length, focusDev: esc(chart.focusDev) } : {};
+    if (focus) sub = "subFocus";
+    return { W, H, pos, ax, band, sub, subVars, small, full, plotW, xVal };
+  }
+
+  function buildDots() {
+    L.dots.innerHTML = models.map(m => `<g class="pt" data-id="${m.id}"><circle r="${R}" style="fill:${dotColour(m)}"></circle></g>`).join("");
+  }
+  function recolourDots() { $$(".pt", L.dots).forEach(g => ($("circle", g).style.fill = dotColour(models[+g.dataset.id]))); }
+
+  function layoutChart() {
+    if (!count) { L.dots.innerHTML = ""; L.ax.innerHTML = ""; L.band.innerHTML = ""; L.marks.innerHTML = ""; return; }
+    geo = computeGeo();
+    svg.setAttribute("viewBox", `0 0 ${geo.W} ${geo.H}`);
+    svg.style.height = `${geo.H}px`;
+    // Re-run the fade-in on axes
+    L.ax.innerHTML = `<g class="ax">${geo.ax}</g>`;
+    L.band.innerHTML = `<g class="band">${geo.band}</g>`;
+    $$(".pt", L.dots).forEach(g => {
+      const p = geo.pos.get(+g.dataset.id);
+      g.style.transform = `translate(${p.x}px, ${p.y}px)`;
+      g.classList.toggle("off", !!p.off);
+      $("circle", g).setAttribute("r", R);
+    });
+    const panning = svg.classList.contains("panning");
+    if (!panning) renderChartSub();
+    applyDim();
+    drawMarks(!panning);
+    syncZoom();
+  }
+
+  function renderChartSub() {
+    const el = $("#chart-sub");
+    if (!geo) return;
+    el.outerHTML = tpl("p", geo.sub, geo.subVars, 'id="chart-sub"');
+  }
+  function applyDim() {
+    const dev = chart.hoverDev || chart.focusDev;
+    svg.classList.toggle("dimming", !!dev);
+    $$(".pt", L.dots).forEach(g => { const id = +g.dataset.id; g.classList.toggle("lit", !!dev && (models[id].developer === dev || (selected && selected.id === id) || (compare && compare.id === id))); });
+  }
+
+  function drawMarks(late) {
+    if (!geo) return;
+    const W = geo.W, labels = [];
+    let out = "";
+    const P = m => m && geo.pos.get(m.id);
+    if (compare && P(compare) && !P(compare).off) out += `<circle class="ring cmp" cx="${P(compare).x}" cy="${P(compare).y}" r="${R + 4.5}"></circle>`;
+    const s = selected && P(selected);
+    if (s && !s.off) out += `<circle class="ring" cx="${s.x}" cy="${s.y}" r="${R + 4.5}"></circle>`;
+    // Labels: focused developer's models (greedy, no overlaps), plus selection and comparison
+    const want = [];
+    if (selected) want.push([selected, true]);
+    if (compare) want.push([compare, false]);
+    const dev = chart.hoverDev || chart.focusDev;
+    if (dev) models.filter(m => m.developer === dev).forEach(m => want.push([m, false]));
+    const boxes = [];
+    const seen = new Set();
+    want.forEach(([m, isSel]) => {
+      if (seen.has(m.id)) return; seen.add(m.id);
+      const p = P(m); if (!p || p.off) return;
+      const text = isSel ? `${m.name} ${fmt1(m.success)}%` : m.name;
+      const w = text.length * (isSel ? 7.4 : 6.6) + 6, h = 15;
+      const right = p.x + R + 6 + w < W;
+      let bx = right ? p.x + R + 6 : p.x - R - 6 - w, by = p.y - h / 2;
+      if (chart.mode === "field" && isSel) { bx = clamp(p.x - w / 2, 0, W - w); by = 4; }
+      const hit = boxes.some(b => bx < b.x + b.w && bx + w > b.x && by < b.y + b.h && by + h > b.y);
+      if (hit && !isSel) return;
+      boxes.push({ x: bx, y: by, w, h });
+      if (chart.mode === "field" && isSel) {
+        out += `<line class="lbl-line" x1="${p.x}" x2="${p.x}" y1="${by + h + 2}" y2="${p.y - R - 5}"></line>`;
+        out += `<text class="lbl sel" x="${bx + w / 2}" y="${by + 12}" text-anchor="middle">${esc(text)}</text>`;
+      } else {
+        out += `<text class="lbl${isSel ? " sel" : ""}" x="${right ? bx : bx + w}" y="${p.y + 4}" text-anchor="${right ? "start" : "end"}">${esc(text)}</text>`;
+      }
+    });
+    L.marks.innerHTML = `<g class="marks${late ? " late" : ""}">${out}</g>`;
+  }
+
+  // Hover + tooltip
+  svg.addEventListener("pointerover", e => {
+    const g = e.target.closest(".pt");
+    if (!g) return;
+    const m = models[+g.dataset.id], p = geo.pos.get(m.id);
+    const scale = svg.getBoundingClientRect().width / geo.W;
+    tooltip.innerHTML = `<b>${esc(m.name)}</b><div class="k">${esc(m.developer)}, ${esc(originLabel(m.origin))}</div>
+      <div class="row"><span class="k">Success</span><span>${fmt1(m.success)}%</span></div>
+      <div class="row"><span class="k">Rank</span><span>${m.tied ? "=" : ""}${m.rank} of ${count}</span></div>
+      <div class="row"><span class="k">File returned</span><span>${isFinite(m.generation) ? fmt1(m.generation) + "%" : "–"}</span></div>`;
+    tooltip.style.left = `${p.x * scale}px`;
+    tooltip.style.top = `${p.y * scale}px`;
+    tooltip.classList.add("show");
+    if (!chart.focusDev) { chart.hoverDev = m.developer; applyDim(); drawMarks(); }
+  });
+  svg.addEventListener("pointerout", e => {
+    const g = e.target.closest(".pt");
+    if (!g || (e.relatedTarget && g.contains(e.relatedTarget))) return;
+    tooltip.classList.remove("show");
+    if (chart.hoverDev) { chart.hoverDev = null; applyDim(); drawMarks(); }
+  });
+  svg.addEventListener("click", e => {
+    if (justDragged) return;
+    const g = e.target.closest(".pt");
+    if (g) { select(models[+g.dataset.id]); return; }
+    const rl = e.target.closest(".rowlabel");
+    if (rl) setFocus(chart.focusDev === rl.dataset.dev ? null : rl.dataset.dev);
+  });
+
+  $$(".tabs button").forEach(b => b.addEventListener("click", () => {
+    chart.mode = b.dataset.mode;
+    resetZoom();
+    $$(".tabs button").forEach(x => x.setAttribute("aria-pressed", x === b));
+    layoutChart();
+  }));
+  $$(".seg button").forEach(b => b.addEventListener("click", () => {
+    scheme = b.dataset.colour;
+    $$(".seg button").forEach(x => x.setAttribute("aria-pressed", x === b));
+    renderLegend(); recolourDots();
+  }));
+
+  /* ---------- Zoom and drag ---------- */
+  const MAX_ZOOM = 10;
+  const zoomEls = { in: $("#zoom-in"), out: $("#zoom-out"), reset: $("#zoom-reset"), lead: $("#zoom-lead"), hint: $("#zoom-hint") };
+  const clampPan = p => clamp(p, 0.5 / chart.zoom, 1 - 0.5 / chart.zoom);
+  let drag = null, panRaf = 0, justDragged = false;
+
+  function resetZoom() { chart.zoom = 1; chart.pan = 0.5; }
+  function setZoom(z, pan = chart.pan) {
+    chart.zoom = z < 1.01 ? 1 : Math.min(MAX_ZOOM, z);
+    chart.pan = clampPan(pan);
+    layoutChart();
+  }
+  function syncZoom() {
+    const zoomed = chart.zoom > 1, [lo, hi] = geo.full;
+    zoomEls.in.disabled = chart.zoom >= MAX_ZOOM;
+    zoomEls.out.disabled = zoomEls.reset.disabled = !zoomed;
+    // The shortcut only makes sense on the views whose x axis is the success rate
+    zoomEls.lead.hidden = !(["field", "developer"].includes(chart.mode) && top >= lo && top <= hi);
+    zoomEls.hint.hidden = !zoomed;
+    svg.classList.toggle("zoomed", zoomed);
+    wrapEl.tabIndex = zoomed ? 0 : -1;
+  }
+  // Selecting a model elsewhere on the page brings its dot into view
+  function reveal(m) {
+    if (chart.zoom === 1 || !geo) return;
+    const p = geo.pos.get(m.id), v = geo.xVal(m), [lo, hi] = geo.full;
+    if (p && p.off && isFinite(v) && v >= lo && v <= hi) setZoom(chart.zoom, (v - lo) / (hi - lo));
+  }
+  zoomEls.in.addEventListener("click", () => setZoom(chart.zoom * 2));
+  zoomEls.out.addEventListener("click", () => setZoom(chart.zoom / 2));
+  zoomEls.reset.addEventListener("click", () => { resetZoom(); layoutChart(); });
+  zoomEls.lead.addEventListener("click", () => {
+    const [lo, hi] = geo.full, tb = tieBand();
+    setZoom((hi - lo) / (tb + 1.5), (top - tb / 2 - 0.25 - lo) / (hi - lo));
+  });
+  wrapEl.addEventListener("keydown", e => {
+    if (chart.zoom === 1 || !["ArrowLeft", "ArrowRight"].includes(e.key)) return;
+    e.preventDefault();
+    setZoom(chart.zoom, chart.pan + (e.key === "ArrowRight" ? 0.25 : -0.25) / chart.zoom);
+  });
+  svg.addEventListener("pointerdown", e => {
+    if (chart.zoom > 1 && e.button === 0) drag = { id: e.pointerId, x: e.clientX, pan: chart.pan, moving: false };
+  });
+  svg.addEventListener("pointermove", e => {
+    if (!drag || e.pointerId !== drag.id) return;
+    const dx = e.clientX - drag.x;
+    if (!drag.moving) {
+      if (Math.abs(dx) < 6) return; // A tap on a dot stays a tap
+      drag.moving = true;
+      svg.setPointerCapture(e.pointerId);
+      svg.classList.add("panning");
+      tooltip.classList.remove("show");
+      chart.hoverDev = null;
+    }
+    chart.pan = clampPan(drag.pan - dx / (geo.plotW * chart.zoom));
+    if (!panRaf) panRaf = requestAnimationFrame(() => { panRaf = 0; layoutChart(); });
+  });
+  function endDrag() {
+    if (!drag) return;
+    const moved = drag.moving;
+    drag = null;
+    if (!moved) return;
+    svg.classList.remove("panning");
+    justDragged = true;
+    setTimeout(() => { justDragged = false; }, 50);
+    layoutChart();
+  }
+  svg.addEventListener("pointerup", endDrag);
+  svg.addEventListener("pointercancel", endDrag);
+
+  /* ---------- Developer focus chips ---------- */
+  function renderDevChips() {
+    const devs = [...new Set(models.map(m => m.developer))]
+      .map(d => ({ d, n: models.filter(m => m.developer === d).length, best: Math.max(...models.filter(m => m.developer === d).map(m => m.success)), m: models.find(m => m.developer === d) }))
+      .sort((a, b) => b.best - a.best);
+    $("#dev-chips").innerHTML = `<span class="lead">${esc(lab("zoomLabel"))}</span><button type="button" class="dchip" data-dev="" aria-pressed="${!chart.focusDev}">${esc(lab("zoomAll"))}</button>` +
+      devs.map(o => `<button type="button" class="dchip" data-dev="${esc(o.d)}" aria-pressed="${chart.focusDev === o.d}"><i style="background:${regionColour(o.m)}"></i>${esc(o.d)} <span style="opacity:.6">${o.n}</span></button>`).join("");
+  }
+  function setFocus(dev) {
+    chart.focusDev = dev || null;
+    chart.hoverDev = null;
+    if (chart.mode !== "developer") resetZoom(); // Only this view keeps its x range when zoomed to an AI lab
+    $$("#dev-chips .dchip").forEach(b => b.setAttribute("aria-pressed", (b.dataset.dev || null) === chart.focusDev));
+    layoutChart();
+  }
+  const chipRow = $("#dev-chips");
+  chipRow.addEventListener("click", e => { const b = e.target.closest(".dchip"); if (b) setFocus(b.dataset.dev === chart.focusDev ? null : b.dataset.dev); });
+  // The edge fade comes off once the last chip is in view
+  const syncChipFade = () => chipRow.classList.toggle("at-end", chipRow.scrollLeft + chipRow.clientWidth >= chipRow.scrollWidth - 2);
+  chipRow.addEventListener("scroll", syncChipFade, { passive: true });
+  new ResizeObserver(syncChipFade).observe(chipRow);
+
+  /* ================= Combobox ================= */
+  function makeCombo(root, onPick, opts = {}) {
+    const input = $("input", root), list = $(".listbox", root), clear = $(".clear", root);
+    let active = -1, items = [];
+    function render() {
+      const q = input.value.trim().toLowerCase();
+      const ex = opts.exclude ? opts.exclude() : null;
+      items = models.filter(m => !ex || m.id !== ex.id).filter(m => !q || m.name.toLowerCase().includes(q) || m.developer.toLowerCase().includes(q));
+      if (q) items.sort((a, b) => (b.name.toLowerCase().startsWith(q) - a.name.toLowerCase().startsWith(q)) || b.success - a.success);
+      list.innerHTML = items.length
+        ? items.map((m, i) => `<li role="option" id="${list.id}-o${i}" data-id="${m.id}" aria-selected="${i === active}"><span>${esc(m.name)}</span><span class="meta">${esc(m.developer)}, ${fmt1(m.success)}%</span></li>`).join("")
+        : `<li class="empty" role="option" aria-disabled="true">No model matches “${esc(input.value)}”. Try an AI lab name, such as OpenAI or Alibaba.</li>`;
+    }
+    function open() { active = -1; render(); list.hidden = false; input.setAttribute("aria-expanded", "true"); }
+    function close() { list.hidden = true; input.setAttribute("aria-expanded", "false"); input.removeAttribute("aria-activedescendant"); }
+    function setActive(i) {
+      if (!items.length) return;
+      active = (i + items.length) % items.length;
+      $$("li", list).forEach((li, j) => li.setAttribute("aria-selected", j === active));
+      const li = $(`#${list.id}-o${active}`);
+      if (li) { li.scrollIntoView({ block: "nearest" }); input.setAttribute("aria-activedescendant", li.id); }
+    }
+    function set(m) { input.value = m ? m.name : ""; root.classList.toggle("has-value", !!m); }
+    function pick(m) { set(m); close(); onPick(m); }
+    input.addEventListener("focus", open);
+    input.addEventListener("input", () => { open(); root.classList.toggle("has-value", !!input.value); });
+    input.addEventListener("keydown", e => {
+      if (e.key === "ArrowDown") { e.preventDefault(); if (list.hidden) open(); setActive(active + 1); }
+      else if (e.key === "ArrowUp") { e.preventDefault(); setActive(active - 1); }
+      else if (e.key === "Enter") { e.preventDefault(); const m = items[active >= 0 ? active : 0]; if (m) pick(m); }
+      else if (e.key === "Escape") close();
+    });
+    list.addEventListener("mousedown", e => { const li = e.target.closest("li[data-id]"); if (li) { e.preventDefault(); pick(models[+li.dataset.id]); } });
+    input.addEventListener("blur", () => setTimeout(close, 100));
+    clear.addEventListener("click", () => { pick(null); input.focus(); });
+    return { set };
+  }
+  const mainCombo = makeCombo($("#combo-main"), m => select(m));
+  const cmpCombo = makeCombo($("#combo-cmp"), m => { compare = m; renderCompare(); drawMarks(); }, { exclude: () => selected });
+
+  /* ================= Result panel ================= */
+  function tierOf(m) {
+    const gap = top - m.success, tb = tieBand();
+    const k = gap <= tb + 1e-9 ? "lead" : gap <= 3 + 1e-9 ? "near" : gap <= 8 + 1e-9 ? "mid" : "low";
+    return [k, lab("tier" + k[0].toUpperCase() + k.slice(1))];
+  }
+  // Notes shown for a model: template keys plus the vars they fill from.
+  const NOTE_CLASS = { noteSkips: "warn", noteOpen: "open" };
+  function notesFor(m) {
+    const gap = top - m.success, keys = [];
+    const [tier] = tierOf(m);
+    keys.push(tier === "lead" ? "noteLead" : tier === "near" ? "noteNear" : "noteFar");
+    const sibs = models.filter(o => o.developer === m.developer && o.id !== m.id);
+    const best = sibs.length ? sibs.reduce((a, b) => (b.success > a.success ? b : a)) : null;
+    if (best && best.success - m.success >= 1) keys.push("noteSibling");
+    if (m.generation < 90) keys.push("noteSkips");
+    keys.push(m.weights === "Open" ? "noteOpen" : "noteClosed");
+    keys.push("noteReview");
+    const vars = {
+      gap: fmt1(gap), others: Math.max(0, stats.nearTop - 1), developer: esc(m.developer),
+      sibling: best ? esc(best.name) : "", siblingScore: best ? fmt1(best.success) : "", siblingGap: best ? fmt1(best.success - m.success) : "",
+      generation: isFinite(m.generation) ? fmt1(m.generation) : "–", name: esc(m.name)
+    };
+    return { keys, vars };
+  }
+
+  // Waffle: 100 cells (20 x 5)
+  const waffle = $("#waffle");
+  waffle.innerHTML = Array.from({ length: 100 }, (_, i) => `<i style="--i:${i}"></i>`).join("");
+  function renderWaffle(m) {
+    const pass = Math.round(m.success);
+    const hasGen = isFinite(m.generation);
+    const returned = hasGen ? Math.max(pass, Math.round(m.generation)) : 100;
+    const fail = returned - pass, none = 100 - returned;
+    $$("i", waffle).forEach((c, i) => { c.className = i < pass ? "pass" : i < returned ? "fail" : "none"; });
+    waffle.setAttribute("aria-label", `Out of 100 files: about ${pass} passed every check, ${fail} were returned but failed a check${hasGen ? `, and ${none} were not returned` : ""}.`);
+    $("#waffle-key").innerHTML = `<span><i style="background:var(--bo-light)"></i><b>${pass}</b> ${tpl("span", "wafflePass")}</span>
+      <span><i style="background:rgba(255,255,255,.3)"></i><b>${fail}</b> ${tpl("span", "waffleFail")}</span>
+      ${hasGen ? `<span><i style="background:var(--bo-coral)"></i><b>${none}</b> ${tpl("span", "waffleNone")}</span>` : ""}`;
+  }
+
+  let countRaf;
+  function countUp(el, to) {
+    cancelAnimationFrame(countRaf);
+    if (reduceMotion) { el.innerHTML = `${fmt1(to)}<small>%</small>`; return; }
+    const from = parseFloat(el.textContent) || 0, t0 = performance.now(), dur = 500;
+    const tick = t => {
+      const k = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - k, 3);
+      el.innerHTML = `${fmt1(from + (to - from) * e)}<small>%</small>`;
+      if (k < 1) countRaf = requestAnimationFrame(tick);
+    };
+    countRaf = requestAnimationFrame(tick);
+  }
+
+  // Remember the selected model in the address so links can be shared.
+  // Sandboxed previews (e.g. embedded iframes) block this, so failures are ignored.
+  function setHash(m) {
+    try { history.replaceState(null, "", m ? `#model=${encodeURIComponent(m.name)}` : location.pathname + location.search); } catch (e) { /* address can't be changed here */ }
+  }
+  function select(m, { scroll = false, updateHash = true } = {}) {
+    selected = m || null;
+    if (compare && selected && compare.id === selected.id) { compare = null; cmpCombo.set(null); }
+    mainCombo.set(selected);
+    if (selected) reveal(selected);
+    $("#result").hidden = !selected;
+    $("#result-empty").hidden = !!selected;
+    $$(".board tbody tr").forEach(tr => tr.classList.toggle("is-selected", !!selected && +tr.dataset.id === selected.id));
+    drawMarks();
+    if (updateHash) setHash(selected);
+    if (!selected) return;
+    const s = selected;
+    $("#r-dev").innerHTML = `<i style="background:${regionColour(s)}"></i>${esc(s.developer)}, ${esc(originLabel(s.origin))}. ${s.weights === "Open" ? "Open-weight" : "Closed"} model.`;
+    $("#r-name").textContent = s.name;
+    countUp($("#r-big"), s.success);
+    $("#r-caption").outerHTML = tpl("p", "caption", { ratio: s.success > 0 ? Math.round(100 / s.success) : "–" }, 'class="r-caption" id="r-caption"');
+    const [tKey, tLabel] = tierOf(s);
+    const tierEl = $("#r-tier"); tierEl.dataset.tier = tKey; tierEl.textContent = tLabel;
+    renderWaffle(s);
+    $("#r-rank").innerHTML = `${s.tied ? "=" : ""}${s.rank}<span> of ${count}</span>`;
+    $("#r-gen").innerHTML = isFinite(s.generation) ? `${fmt1(s.generation)}%<span> of files</span>` : "–";
+    $("#r-effort").innerHTML = isFinite(s.effort) ? `${s.effort.toFixed(2)}<span> hours</span>` : "–";
+    const { keys, vars } = notesFor(s);
+    $("#r-notes").innerHTML = keys.map(k => `<li${NOTE_CLASS[k] ? ` class="${NOTE_CLASS[k]}"` : ""}>${tpl("span", k, vars)}</li>`).join("");
+    renderCompare();
+    if (scroll) $("#explore").scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth" });
+  }
+
+  function renderCompare() {
+    const out = $("#cmp-out");
+    if (!selected || !compare) { out.innerHTML = ""; return; }
+    const a = selected, b = compare;
+    const row = (label, va, vb, max, f, unit) => `<div class="vs-row"><span>${esc(label)}</span><div class="vs-bars">
+      <div class="vs-bar a"><div class="t"><b style="width:${isFinite(va) ? clamp(va / max * 100, 0, 100) : 0}%"></b></div><span class="v">${isFinite(va) ? f(va) + unit : "–"}</span></div>
+      <div class="vs-bar b"><div class="t"><b style="width:${isFinite(vb) ? clamp(vb / max * 100, 0, 100) : 0}%"></b></div><span class="v">${isFinite(vb) ? f(vb) + unit : "–"}</span></div></div></div>`;
+    const gap = Math.abs(a.success - b.success), tb = tieBand();
+    const leader = a.success >= b.success ? a : b, other = leader === a ? b : a;
+    const vars = { gap: fmt1(gap), leader: esc(leader.name), other: esc(other.name) };
+    const verdict = gap < 1e-9 ? "verdictSame" : gap <= tb + 1e-9 ? "verdictTie" : "verdictLead";
+    const effMax = Math.max(2.5, ...models.filter(m => isFinite(m.effort)).map(m => m.effort));
+    out.innerHTML = `<div class="vs">
+      <div class="vs-names"><span><i style="background:var(--bo-primary)"></i>${esc(a.name)}</span><span><i style="background:var(--bo-purple)"></i>${esc(b.name)}</span></div>
+      ${row(lab("compareSuccess"), a.success, b.success, axisMax, fmt1, "%")}
+      ${row(lab("compareReturned"), a.generation, b.generation, 100, fmt1, "%")}
+      ${row(lab("compareEffort"), a.effort, b.effort, effMax, v => v.toFixed(2), "h")}
+      </div>
+      ${tpl("p", verdict, vars, 'class="cmp-verdict"')}`;
+  }
+
+  /* ================= Quick picks ================= */
+  function renderQuick() {
+    const q = $("#quick-picks");
+    const picks = BARE.quickPicks.map(n => byName.get(String(n).trim().toLowerCase())).filter(Boolean);
+    q.innerHTML = picks.length ? `<span>${esc(BARE.quickPicksLabel || "")}</span>` + picks.map(m => `<button type="button" class="chip" data-id="${m.id}">${esc(m.name)}</button>`).join("") : "";
+  }
+  $("#quick-picks").addEventListener("click", e => { const b = e.target.closest(".chip"); if (b) select(models[+b.dataset.id]); });
+
+  /* ================= Table ================= */
+  const tbody = $("#board tbody");
+  let sortKey = "rank", sortDir = 1, showAll = false;
+  const PREVIEW_ROWS = 25;
+  function renderOriginFilter() {
+    const sel = $("#t-origin"), cur = sel.value;
+    const origins = [...new Set(models.map(m => m.origin))].sort();
+    sel.innerHTML = `<option value="">All origins</option>` + origins.map(o => `<option value="${esc(o)}">${esc(originLabel(o))}</option>`).join("");
+    sel.value = origins.includes(cur) ? cur : "";
+  }
+  function renderTable() {
+    const q = $("#t-search").value.trim().toLowerCase(), o = $("#t-origin").value, w = $("#t-weights").value;
+    let rows = models.filter(m => (!q || m.name.toLowerCase().includes(q) || m.developer.toLowerCase().includes(q)) && (!o || m.origin === o) && (!w || m.weights === w));
+    rows.sort((a, b) => {
+      const va = a[sortKey], vb = b[sortKey];
+      const c = typeof va === "string" ? va.localeCompare(vb) : (isFinite(va) ? va : -1) - (isFinite(vb) ? vb : -1);
+      return (c || a.rank - b.rank) * sortDir;
+    });
+    const filtered = q || o || w, total = rows.length, tb = tieBand();
+    if (!showAll && !filtered) rows = rows.slice(0, PREVIEW_ROWS);
+    $("#more-row").hidden = !!filtered || total <= PREVIEW_ROWS;
+    $("#t-more").textContent = showAll ? lab("showTop", { n: PREVIEW_ROWS }) : lab("showAll", { n: total });
+    tbody.innerHTML = rows.map(m => `<tr data-id="${m.id}" class="${selected && selected.id === m.id ? "is-selected" : ""}" tabindex="0">
+        <td><span class="rk${top - m.success <= tb + 1e-9 ? " lead" : ""}">${m.tied ? "=" : ""}${m.rank}</span></td>
+        <td class="model">${esc(m.name)}</td>
+        <td class="dev"><i style="background:${regionColour(m)}"></i>${esc(m.developer)}</td>
+        <td><span class="tag ${m.weights}">${m.weights}</span></td>
+        <td class="bar-cell"><div class="bar"><div class="track"><div class="fill" style="width:${(m.success / axisMax) * 100}%"></div></div><span class="v">${fmt1(m.success)}%</span></div></td>
+        <td class="bar-cell"><div class="bar gen"><div class="track"><div class="fill" style="width:${isFinite(m.generation) ? m.generation : 0}%"></div></div><span class="v">${isFinite(m.generation) ? fmt1(m.generation) + "%" : "–"}</span></div></td>
+        <td class="num">${isFinite(m.effort) ? m.effort.toFixed(2) : "–"}</td></tr>`).join("")
+      || `<tr><td colspan="7" style="color:var(--ink-3);cursor:default">No models match these filters. Clear the search or choose “All origins”.</td></tr>`;
+    $("#t-count").textContent = `Showing ${rows.length} of ${count}`;
+  }
+  $("#t-more").addEventListener("click", () => { showAll = !showAll; renderTable(); });
+  $$("#board th").forEach(th => th.querySelector("button").addEventListener("click", () => {
+    const k = th.dataset.key;
+    if (sortKey === k) sortDir *= -1; else { sortKey = k; sortDir = ["success", "generation"].includes(k) ? -1 : 1; }
+    $$("#board th").forEach(t => t.removeAttribute("aria-sort"));
+    th.setAttribute("aria-sort", sortDir === 1 ? "ascending" : "descending");
+    renderTable();
+  }));
+  ["#t-search", "#t-origin", "#t-weights"].forEach(s => $(s).addEventListener("input", renderTable));
+  tbody.addEventListener("click", e => { const tr = e.target.closest("tr[data-id]"); if (tr) select(models[+tr.dataset.id], { scroll: true }); });
+  tbody.addEventListener("keydown", e => {
+    if (e.key !== "Enter" && e.key !== " ") return;
+    const tr = e.target.closest("tr[data-id]");
+    if (tr) { e.preventDefault(); select(models[+tr.dataset.id], { scroll: true }); }
+  });
+
+  /* ================= Full render ================= */
+  function renderAll() {
+    const keepSel = selected && selected.name, keepCmp = compare && compare.name;
+    derive();
+    if (chart.focusDev && !models.some(m => m.developer === chart.focusDev)) chart.focusDev = null;
+    renderText(); renderLegend(); renderQuick(); renderDevChips(); renderOriginFilter();
+    buildDots(); layoutChart(); renderTable();
+    compare = keepCmp ? byName.get(keepCmp.toLowerCase()) || null : null;
+    cmpCombo.set(compare);
+    select(keepSel ? byName.get(keepSel.toLowerCase()) || null : null, { updateHash: false });
+  }
+
+  /* ================= Init ================= */
+  renderAll();
+  let fromHash = ""; try { fromHash = decodeURIComponent((location.hash.match(/model=([^&]+)/) || [])[1] || ""); } catch (e) {}
+  if (fromHash && byName.get(fromHash.toLowerCase())) select(byName.get(fromHash.toLowerCase()), { updateHash: false });
+  let rt, lastW = wrapEl.clientWidth;
+  new ResizeObserver(() => { if (wrapEl.clientWidth === lastW) return; lastW = wrapEl.clientWidth; clearTimeout(rt); rt = setTimeout(layoutChart, 80); }).observe(wrapEl);
+})();

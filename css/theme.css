@@ -1,0 +1,91 @@
+/* =====================================================================
+   THEME: toggle button and dark overrides for the Webflow site chrome.
+   The Webflow navbar is light-only; these recolour it from the tokens in
+   css/bare-benchmark.css when <html data-theme="dark"> is set by js/theme.js.
+   ===================================================================== */
+/* Theme toggle, sits first in the nav's button groups */
+.theme-toggle {
+  display: inline-grid; place-items: center; flex: none; width: 2.6em; height: 2.6em; padding: 0; margin-right: .25em;
+  border: 1px solid var(--rule); border-radius: 50%; background: transparent; color: var(--ink); cursor: pointer;
+  transition: background .15s, border-color .15s, color .15s;
+}
+.theme-toggle:hover { border-color: var(--accent); color: var(--accent); }
+.theme-toggle svg { grid-area: 1 / 1; }
+.theme-toggle-sun { display: none; }
+:root[data-theme="dark"] .theme-toggle-sun { display: block; }
+:root[data-theme="dark"] .theme-toggle-moon { display: none; }
+
+/* Dark theme for the nav. The Webflow nav is light-only, so these recolour it from our tokens. */
+:root[data-theme="dark"] .site-header .navbar { background-color: color-mix(in srgb, var(--bg) 85%, transparent); color: var(--ink); }
+:root[data-theme="dark"] .site-header .nav_brand-link { color: #fff; }
+:root[data-theme="dark"] .site-header .nav_link,
+:root[data-theme="dark"] .site-header .nav_dd-link,
+:root[data-theme="dark"] .site-header .menu_col,
+:root[data-theme="dark"] .site-header .menu_li,
+:root[data-theme="dark"] .site-header .nav_dd-list p.u-bold:not(.u-white-text) { color: var(--ink); }
+:root[data-theme="dark"] .site-header .nav_link:hover,
+:root[data-theme="dark"] .site-header .nav_dd-link:hover { color: var(--accent); }
+:root[data-theme="dark"] .site-header .nav_link.w--open { background-color: var(--surface); color: var(--ink); }
+:root[data-theme="dark"] .site-header .nav_dd-list { background-color: var(--surface); }
+:root[data-theme="dark"] .site-header .nav_dd-list .u-primary-text,
+:root[data-theme="dark"] .site-header .nav_platform-sublink:not(.u-white-link),
+:root[data-theme="dark"] .site-header .nav_sublink,
+:root[data-theme="dark"] .site-header .nav_sublink .ps,
+:root[data-theme="dark"] .site-header .nav_banner-text { color: var(--accent); }
+:root[data-theme="dark"] .site-header .section-divider { background-color: var(--accent); }
+:root[data-theme="dark"] .site-header .menu_divider { background-color: var(--rule); }
+:root[data-theme="dark"] .site-header .nav_benchmark-bg { background-color: var(--card); }
+:root[data-theme="dark"] .site-header .master-button.cc-outlined-1 { border-color: var(--accent); color: var(--accent); }
+:root[data-theme="dark"] .site-header .master-button.cc-outlined-1:hover { background-color: var(--accent-soft); }
+:root[data-theme="dark"] .site-header .nav__menu-parent { background-color: var(--surface); border-color: var(--rule); }
+:root[data-theme="dark"] .site-header .menu__icon-top,
+:root[data-theme="dark"] .site-header .menu__icon-middle,
+:root[data-theme="dark"] .site-header .menu__icon-bottom { background-color: var(--ink); }
+:root[data-theme="dark"] .site-header .nav_top-banner { background-color: color-mix(in srgb, var(--surface) 80%, transparent); border-color: var(--rule); color: var(--ink); }
+:root[data-theme="dark"] .site-header .nav_banner-icon,
+:root[data-theme="dark"] .site-header .nav_banner-close { color: var(--ink); }
+@media (max-width: 991px) {
+  :root[data-theme="dark"] .site-header .nav_popout-menu,
+  :root[data-theme="dark"] .site-header .nav_menu-content,
+  :root[data-theme="dark"] .site-header .nav_mobile-backdrop { background-color: var(--bg); }
+  /* Webflow's menu interaction paints this bar white inline while the menu is open */
+  :root[data-theme="dark"] .site-header .nav_grid { background-color: var(--bg) !important; }
+}
+
+/* Dark theme for the rest of the Webflow page. The site colours come from Webflow's
+   --_themes---colours--* variables on :root; the navbar and footer set their own copies,
+   so swapping them on body recolours the page and hero but leaves those components alone.
+   neutral-1 stays as it is: the site's ::selection colours (neutral-1 behind white text) rely on it. */
+:root[data-theme="dark"] body {
+  --_themes---colours--grey: var(--surface);
+  --_themes---colours--grey-2: var(--surface-2);
+  --_themes---colours--grey-3: var(--rule);
+  --_themes---colours--neutral-2: var(--ink);
+  --_themes---colours--neutral-3: var(--ink-2);
+  background-color: var(--surface); color: var(--ink);
+}
+/* The hero's fade is hard-coded from white */
+:root[data-theme="dark"] .home_hero .section-gradient.cc-white-grey { background-image: linear-gradient(180deg, var(--bg), var(--surface) 50%); }
+/* Grid artwork is navy lines on a transparent ground; flip it so it still shows */
+:root[data-theme="dark"] .home_hero .page_grid-bg { filter: invert(1); }
+/* Eyebrow badges (white variant) and the outlined button are drawn in fixed colours */
+:root[data-theme="dark"] main .badge.w-variant-0f414a01-275f-c723-8cac-a6f570fae32c { background-color: var(--card); }
+:root[data-theme="dark"] .home_hero .master-button.w-variant-f1840367-83c0-3fd8-1877-4977fc700645 { border-color: var(--accent); color: var(--accent); }
+:root[data-theme="dark"] .home_hero .master-button.w-variant-f1840367-83c0-3fd8-1877-4977fc700645:hover { background-color: var(--accent-soft); }
+
+/* Native BARE sections. Their colours come from the Webflow variables swapped on body above;
+   these are the ones that stay fixed in those variables. */
+:root[data-theme="dark"] .bare_move { background-color: var(--bg); }
+/* :not(:hover) leaves the coloured hover border set in Webflow alone */
+:root[data-theme="dark"] .bare_move:not(:hover) { border-color: var(--rule); }
+:root[data-theme="dark"] .bare_check-dot:not(.is-hard) { background-color: var(--card); }
+/* Site classes used in those sections, which take fixed Grey and White variables */
+:root[data-theme="dark"] main .global-section.cc-white-section { background-color: var(--bg); }
+:root[data-theme="dark"] main .card.cc-grey-card { background-color: var(--surface); border-color: var(--rule); }
+/* Matches .chart-card, which has no visible border */
+:root[data-theme="dark"] main .card.cc-white-card { background-color: var(--card); border-color: transparent; box-shadow: var(--card-shadow); }
+/* The card borders use the fixed Grey 200 variable */
+:root[data-theme="dark"] .bare .chart-card,
+:root[data-theme="dark"] .bare .result { border-color: transparent; }
+/* Primary blue is too dark to read on the dark ground */
+:root[data-theme="dark"] main .u-primary-text { color: var(--accent); }

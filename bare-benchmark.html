@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BARE: Can AI models clean up real code? | BlueOptima</title>
+<meta name="description" content="BlueOptima's BARE benchmark tests AI models on refactoring real production code. Pick a model to see how it performed.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400..800&amp;display=swap" rel="stylesheet">
+<!-- DEV PREVIEW ONLY: Webflow supplies these on the live site. Remove before publishing. -->
+<link href="dev/blueoptima.shared.css" rel="stylesheet">
+<link href="dev/webflow-custom.css" rel="stylesheet">
+<!-- /DEV PREVIEW ONLY -->
+<script src="js/theme.js"></script>
+<link href="css/bare-benchmark.css" rel="stylesheet">
+<link href="css/theme.css" rel="stylesheet">
+</head>
+<body>
+
+<!-- Site navigation: copied from the Webflow export (export/index.htm). Keep in step with the live site. -->
+<header class="site-header"><div data-animation="default" class="navbar w-nav" data-wf--navbar--variant="base" data-easing2="ease" data-easing="ease" data-collapse="none" role="banner" data-duration="400"><a id="skip-link" href="#main" class="nav__skip-to-content">Skip to main content</a><div class="navbar-container w-container"><div id="w-node-_7b161dc1-aed5-e4d3-3c22-5fff6a4d9881-6a4d9875" class="nav_grid"><a href="/" class="nav_brand-link w-nav-brand"><div class="w-embed"><svg width="5.32em" height="1.0em" viewBox="0 0 303 57" fill="none" xmlns="http://www.w3.org/2000/svg" style="position: relative !important; top: -0.18em !important; display: inline-block !important;">
+<path fill-rule="evenodd" clip-rule="evenodd" d="M35.1464 0C54.5558 0 70.2929 15.7206 70.2929 35.115C70.2929 40.2096 69.2059 45.0501 67.2518 49.4193H3.04103C1.08691 45.0501 0 40.2096 0 35.115C0 15.7229 15.7347 0 35.1464 0Z" fill="currentColor"/>
+
+<path d="M96.7116 39.0567C96.7116 37.0049 96.397 35.5401 95.7773 34.6621C95.1506 33.7795 94.1862 33.3428 92.8889 33.3428C92.313 33.3428 91.7442 33.4375 91.173 33.6177C90.6041 33.798 90.0444 34.0752 89.494 34.4449V44.7705C89.9195 44.9392 90.352 45.0593 90.7914 45.1148C91.2238 45.1772 91.6563 45.2095 92.0818 45.2095C93.6428 45.2095 94.8014 44.6966 95.5645 43.6707C96.3277 42.6449 96.7116 41.1107 96.7116 39.0567ZM103.289 38.925C103.289 42.1989 102.456 44.8445 100.789 46.8661C99.1236 48.8878 97.0631 49.9021 94.6002 49.9021C93.5734 49.9021 92.6784 49.782 91.9199 49.5509C91.1637 49.313 90.3543 48.9502 89.4963 48.4627L89.2211 49.4886H83.0697V20.9493H89.4963V31.0623C90.4422 30.256 91.4019 29.5975 92.3778 29.0984C93.3606 28.597 94.4961 28.3475 95.7796 28.3475C98.18 28.3475 100.032 29.2786 101.337 31.1501C102.641 33.0216 103.291 35.6117 103.291 38.925" fill="currentColor"/>
+
+<path d="M111.91 20.9516H105.483V49.4909H111.91V20.9516Z" fill="currentColor"/>
+
+<path d="M133.426 49.4909H126.999V47.2127C125.885 48.1462 124.862 48.8462 123.93 49.3291C123.003 49.8097 121.895 50.0546 120.61 50.0546C118.561 50.0546 116.97 49.41 115.823 48.1207C114.676 46.8315 114.107 44.8907 114.107 42.3075V28.9136H120.533V39.1144C120.533 40.1773 120.559 41.0483 120.614 41.7184C120.672 42.3884 120.802 42.9591 121.014 43.4212C121.209 43.8463 121.516 44.1721 121.93 44.3916C122.337 44.6111 122.913 44.7243 123.653 44.7243C124.111 44.7243 124.65 44.6111 125.269 44.3916C125.896 44.1721 126.472 43.8717 126.999 43.4974V28.9159H133.426V49.4955V49.4909Z" fill="currentColor"/>
+
+<path d="M147.699 50.0546C143.802 50.0546 140.815 49.1281 138.736 47.2705C136.661 45.4128 135.623 42.765 135.623 39.3293C135.623 35.8936 136.594 33.2897 138.53 31.2795C140.465 29.2763 143.178 28.2759 146.654 28.2759C149.817 28.2759 152.197 29.1261 153.788 30.829C155.386 32.5249 156.182 34.9602 156.182 38.1325V40.443H142.05C142.112 41.3995 142.313 42.1966 142.658 42.8413C143.002 43.4859 143.453 43.9919 144.022 44.3754C144.575 44.7497 145.218 45.027 145.953 45.1887C146.691 45.3574 147.493 45.4383 148.365 45.4383C149.117 45.4383 149.85 45.3574 150.576 45.1887C151.302 45.0201 151.966 44.8006 152.567 44.5256C153.094 44.2876 153.582 44.0381 154.026 43.7632C154.477 43.4882 154.84 43.2502 155.123 43.0377H155.807V48.3518C155.28 48.5597 154.799 48.7515 154.366 48.9271C153.927 49.1073 153.333 49.2899 152.574 49.4724C151.873 49.6526 151.152 49.7982 150.414 49.9045C149.669 50.0107 148.768 50.0616 147.701 50.0616M149.868 36.5798C149.831 35.2097 149.512 34.163 148.916 33.4514C148.314 32.7305 147.399 32.3747 146.166 32.3747C144.933 32.3747 143.916 32.749 143.208 33.5068C142.501 34.2578 142.105 35.2836 142.031 36.5798H149.868Z" fill="currentColor"/>
+
+<path d="M202.144 38.888C202.144 42.1735 201.304 44.8283 199.63 46.8431C197.951 48.8578 195.884 49.8652 193.428 49.8652C192.401 49.8652 191.504 49.7474 190.741 49.514C189.982 49.2829 189.168 48.9248 188.31 48.4373V57H181.883V28.8743H188.31V31.0208C189.256 30.219 190.22 29.5628 191.205 29.0615C192.184 28.5601 193.324 28.3105 194.607 28.3105C197.008 28.3105 198.86 29.2555 200.169 31.1525C201.485 33.0494 202.144 35.621 202.144 38.888ZM195.567 39.0266C195.567 37.0234 195.252 35.5655 194.633 34.6644C194.013 33.7564 193.042 33.3058 191.726 33.3058C191.15 33.3058 190.572 33.4006 190.003 33.5808C189.427 33.7633 188.863 34.0383 188.312 34.408V44.7659C188.657 44.9161 189.034 45.0224 189.446 45.0801C189.859 45.1425 190.347 45.1749 190.916 45.1749C192.489 45.1749 193.661 44.6619 194.418 43.6407C195.181 42.6218 195.565 41.0876 195.565 39.0289" fill="currentColor"/>
+
+<path d="M213.839 49.8675C211.221 49.8675 209.311 49.3291 208.113 48.2524C206.917 47.1757 206.32 45.4174 206.32 42.9706V33.3451H203.876V28.8766H206.32V22.9802H212.747V28.8766H218.947V33.3451H212.747V40.6555C212.747 41.381 212.754 42.0141 212.766 42.5524C212.779 43.0908 212.879 43.5737 213.059 44.0057C213.228 44.4309 213.536 44.7751 213.968 45.027C214.408 45.2765 215.039 45.4013 215.871 45.4013C216.216 45.4013 216.667 45.3273 217.224 45.1748C217.782 45.0247 218.177 44.8883 218.394 44.7613H218.945V49.2806C218.249 49.4677 217.504 49.611 216.72 49.7127C215.938 49.8189 214.972 49.8698 213.832 49.8698" fill="currentColor"/>
+
+<path d="M224.837 18.38C227.085 18.38 228.905 20.1984 228.905 22.4442C228.905 24.69 227.085 26.5083 224.837 26.5083C222.589 26.5083 220.769 24.69 220.769 22.4442C220.769 20.1984 222.589 18.38 224.837 18.38Z" fill="currentColor"/>
+
+<path d="M228.033 28.8743H221.606V49.4539H228.033V28.8743Z" fill="currentColor"/>
+
+<path d="M256.295 49.4539V39.1768C256.295 38.1625 256.276 37.3053 256.237 36.6099C256.198 35.9144 256.087 35.346 255.893 34.907C255.703 34.468 255.405 34.1423 255 33.9436C254.595 33.7425 254.038 33.6432 253.309 33.6432C252.796 33.6432 252.294 33.7495 251.792 33.962C251.297 34.1746 250.752 34.4819 250.167 34.8701V49.4516H243.493V39.1745C243.493 38.1718 243.474 37.3215 243.428 36.6214C243.382 35.9144 243.266 35.346 243.069 34.907C242.882 34.468 242.581 34.1423 242.179 33.9436C241.781 33.7425 241.222 33.6432 240.507 33.6432C239.954 33.6432 239.42 33.768 238.9 34.0129C238.373 34.2578 237.866 34.5397 237.364 34.8701V49.4516H230.69V28.872H237.364V31.1502C238.456 30.256 239.485 29.5605 240.447 29.0592C241.416 28.5578 242.503 28.3082 243.705 28.3082C245.014 28.3082 246.164 28.6086 247.153 29.2024C248.148 29.8031 248.904 30.6996 249.424 31.8803C250.705 30.7297 251.915 29.847 253.053 29.2324C254.186 28.6132 255.342 28.3059 256.508 28.3059C257.504 28.3059 258.388 28.4561 259.176 28.7634C259.963 29.0707 260.633 29.5259 261.179 30.1405C261.778 30.7967 262.22 31.5799 262.518 32.4926C262.819 33.4006 262.967 34.5905 262.967 36.053V49.447H256.293L256.295 49.4539Z" fill="currentColor"/>
+
+<path d="M278.482 44.0774V39.766C277.404 39.8792 276.528 39.9716 275.864 40.0525C275.193 40.1264 274.541 40.2835 273.896 40.5215C273.339 40.7156 272.906 41.0159 272.592 41.411C272.284 41.8108 272.129 42.3445 272.129 43.0076C272.129 43.978 272.386 44.6411 272.899 45.0039C273.42 45.3666 274.176 45.5468 275.187 45.5468C275.744 45.5468 276.315 45.4151 276.898 45.1587C277.481 44.9022 278.008 44.5395 278.482 44.0774ZM278.482 47.2705C278.043 47.6401 277.649 47.9705 277.305 48.2663C276.953 48.5551 276.491 48.8485 275.901 49.142C275.33 49.4239 274.773 49.6433 274.229 49.7935C273.69 49.9437 272.932 50.02 271.956 50.02C270.138 50.02 268.63 49.4054 267.432 48.1785C266.23 46.9516 265.629 45.4128 265.629 43.5483C265.629 42.0141 265.936 40.7757 266.544 39.8376C267.153 38.8926 268.029 38.1417 269.176 37.5895C270.335 37.0257 271.72 36.6329 273.33 36.4134C274.939 36.1939 276.669 36.0253 278.524 35.9005V35.7873C278.524 34.6551 278.103 33.865 277.27 33.4352C276.438 33.0031 275.184 32.7836 273.519 32.7836C272.761 32.7836 271.877 32.9223 270.869 33.1972C269.861 33.4722 268.871 33.8234 267.907 34.2485H267.361V29.2671C267.999 29.0845 269.021 28.8673 270.443 28.6155C271.859 28.3637 273.293 28.2389 274.733 28.2389C278.278 28.2389 280.862 28.8281 282.483 30.011C284.106 31.194 284.913 32.9962 284.913 35.4245V49.4562H278.487V47.2728L278.482 47.2705Z" fill="currentColor"/>
+
+<path d="M179.689 39.1699C179.689 42.5571 178.762 45.2211 176.907 47.1688C175.048 49.1143 172.427 50.0916 169.033 50.0916C165.638 50.0916 163.043 49.1143 161.177 47.1688C159.31 45.2234 158.376 42.5571 158.376 39.1699C158.376 35.7827 159.31 33.0748 161.177 31.1409C163.043 29.207 165.663 28.2366 169.033 28.2366C172.402 28.2366 175.034 29.2139 176.895 31.1594C178.757 33.1048 179.689 35.7781 179.689 39.1699ZM173.112 39.2069C173.112 37.9915 173.012 36.9795 172.804 36.1709C172.603 35.3576 172.321 34.7129 171.965 34.2254C171.59 33.7125 171.155 33.3567 170.674 33.1557C170.198 32.9546 169.648 32.8553 169.033 32.8553C168.457 32.8553 167.929 32.9431 167.467 33.1187C166.997 33.2943 166.565 33.6316 166.17 34.133C165.807 34.609 165.506 35.2605 165.286 36.0854C165.066 36.9171 164.953 37.9569 164.953 39.2092C164.953 40.4615 165.06 41.4804 165.268 42.2498C165.473 43.0261 165.749 43.6384 166.082 44.1028C166.426 44.5788 166.852 44.923 167.372 45.1425C167.886 45.362 168.461 45.4752 169.09 45.4752C169.604 45.4752 170.131 45.362 170.668 45.1425C171.199 44.923 171.625 44.5972 171.944 44.1606C172.326 43.6338 172.615 43.0076 172.816 42.2706C173.01 41.5312 173.11 40.5123 173.11 39.2092" fill="currentColor"/>
+
+<path d="M287.138 22.3194H289.346V28.1973H290.981V22.3194H293.19V20.9516H287.138V22.3194Z" fill="currentColor"/>
+
+<path d="M301.823 20.9516H300.639H300.315L298.363 25.9122L296.423 20.9516H296.097H294.915H294.45V28.1973H296.097V23.812L297.91 28.1973H298.816L300.639 23.8004V28.1973H302.276V20.9516H301.823Z" fill="currentColor"/>
+
+</svg> 
+
+</div></a><div id="w-node-_7b161dc1-aed5-e4d3-3c22-5fff6a4d9884-6a4d9875" class="nav_popout-menu"><div class="nav_mobile-backdrop"></div><div class="nav_menu-content"><ul role="list" class="nav_ul"><li class="nav_dd-li"><div data-delay="0" data-hover="false" class="nav_dd cc-static w-dropdown"><div class="nav_link cc-static w-dropdown-toggle"><div>Platform</div><div class="nav_dd-icon w-embed"><svg width="0.8em" height="0.5em" viewBox="0 0 13 8" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M11 2L6.5 6L2 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="square"/>
+</svg></div></div><nav class="nav_dd-list cc-mega cc-mega-full-width w-dropdown-list"><div class="nav_menu-grid cc-platform-v2"><div class="nav_mega-v2-product"><a href="/platform/performance-insights" class="nav_menu-header w-inline-block"><img src="https://cdn.prod.website-files.com/6810e237f744f9c0338e055e/68136ff5260ad619c366a4bd_2893c6fa7c599557f1dd449ae699259d_performance-insights-icon.svg" loading="lazy" alt="Performance Insights Icon" class="product_icon u-nav-small"/><h3 class="h3 xs u-primary-text u-mb-0">Performance Insights</h3></a><p class="u-bold u-mb-0">Developer Analytics</p><div class="w-layout-vflex nav_product-link-parent"><a href="/platform/performance-insights#navbar-trigger" class="nav_platform-sublink w-inline-block"><div class="nav_small-icon w-embed"><svg width="1.8em" height="1.8em" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M3 13.125C3 12.504 3.504 12 4.125 12H6.375C6.996 12 7.5 12.504 7.5 13.125V19.875C7.5 20.496 6.996 21 6.375 21H4.125C3.82663 21 3.54048 20.8815 3.3295 20.6705C3.11853 20.4595 3 20.1734 3 19.875V13.125ZM9.75 8.625C9.75 8.004 10.254 7.5 10.875 7.5H13.125C13.746 7.5 14.25 8.004 14.25 8.625V19.875C14.25 20.496 13.746 21 13.125 21H10.875C10.5766 21 10.2905 20.8815 10.0795 20.6705C9.86853 20.4595 9.75 20.1734 9.75 19.875V8.625ZM16.5 4.125C16.5 3.504 17.004 3 17.625 3H19.875C20.496 3 21 3.504 21 4.125V19.875C21 20.496 20.496 21 19.875 21H17.625C17.3266 21 17.0405 20.8815 16.8295 20.6705C16.6185 20.4595 16.5 20.1734 16.5 19.875V4.125Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg></div><div>Productivity Analysis</div></a><a href="/platform/performance-insights#navbar-trigger" class="nav_platform-sublink w-inline-block"><div class="nav_small-icon w-embed"><svg xmlns="http://www.w3.org/2000/svg" width="1.6em" height="1.6em" viewBox="0 0 24 25" fill="none">
+  <path d="M14.25 10.25L16.5 12.5L14.25 14.75M9.75 14.75L7.5 12.5L9.75 10.25M6 20.75H18C18.5967 20.75 19.169 20.5129 19.591 20.091C20.0129 19.669 20.25 19.0967 20.25 18.5V6.5C20.25 5.90326 20.0129 5.33097 19.591 4.90901C19.169 4.48705 18.5967 4.25 18 4.25H6C5.40326 4.25 4.83097 4.48705 4.40901 4.90901C3.98705 5.33097 3.75 5.90326 3.75 6.5V18.5C3.75 19.0967 3.98705 19.669 4.40901 20.091C4.83097 20.5129 5.40326 20.75 6 20.75Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg></div><div>Code Quality</div></a><a href="/platform/features/codeledger" class="nav_platform-sublink w-inline-block"><div class="nav_small-icon w-embed"><svg width="1.8em" height="1.8em" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M12 6V18M9 15.182L9.879 15.841C11.05 16.72 12.949 16.72 14.121 15.841C15.293 14.962 15.293 13.538 14.121 12.659C13.536 12.219 12.768 12 12 12C11.275 12 10.55 11.78 9.997 11.341C8.891 10.462 8.891 9.038 9.997 8.159C11.103 7.28 12.897 7.28 14.003 8.159L14.418 8.489M21 12C21 13.1819 20.7672 14.3522 20.3149 15.4442C19.8626 16.5361 19.1997 17.5282 18.364 18.364C17.5282 19.1997 16.5361 19.8626 15.4442 20.3149C14.3522 20.7672 13.1819 21 12 21C10.8181 21 9.64778 20.7672 8.55585 20.3149C7.46392 19.8626 6.47177 19.1997 5.63604 18.364C4.80031 17.5282 4.13738 16.5361 3.68508 15.4442C3.23279 14.3522 3 13.1819 3 12C3 9.61305 3.94821 7.32387 5.63604 5.63604C7.32387 3.94821 9.61305 3 12 3C14.3869 3 16.6761 3.94821 18.364 5.63604C20.0518 7.32387 21 9.61305 21 12Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg></div><div>Software Capitalization</div></a><a href="/platform/features/ai-trust-layer" class="nav_platform-sublink w-inline-block"><div class="nav_small-icon w-embed"><svg xmlns="http://www.w3.org/2000/svg" width="1.8em" height="1.8em" viewBox="0 0 24 25" fill="none">
+  <path d="M6.75 8L9.75 10.25L6.75 12.5M11.25 12.5H14.25M5.25 20.75H18.75C19.3467 20.75 19.919 20.5129 20.341 20.091C20.7629 19.669 21 19.0967 21 18.5V6.5C21 5.90326 20.7629 5.33097 20.341 4.90901C19.919 4.48705 19.3467 4.25 18.75 4.25H5.25C4.65326 4.25 4.08097 4.48705 3.65901 4.90901C3.23705 5.33097 3 5.90326 3 6.5V18.5C3 19.0967 3.23705 19.669 3.65901 20.091C4.08097 20.5129 4.65326 20.75 5.25 20.75Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg></div><div>AI Impact</div></a></div></div><div class="nav_mega-v2-product"><a href="/platform/code-insights" class="nav_menu-header w-inline-block"><img src="https://cdn.prod.website-files.com/6810e237f744f9c0338e055e/68136ff408bf55834435e40b_4e468d23925d040950c190f234acc436_code-insights-icon.svg" loading="lazy" alt="Code Insights Icon" class="product_icon u-nav-small"/><h3 class="h3 xs u-primary-text u-mb-0">Code Insights</h3></a><p class="u-bold u-mb-0">Code Security</p><div class="w-layout-vflex nav_product-link-parent"><a href="/platform/code-insights#secrets-vulnerability-detection" class="nav_platform-sublink w-inline-block"><div class="nav_small-icon w-embed"><svg xmlns="http://www.w3.org/2000/svg" width="1.8em" height="1.8em" viewBox="0 0 24 25" fill="none">
+  <path d="M12 9.49999V13.25M12 3.21399C9.73574 5.36422 6.72027 6.54357 3.598 6.49999C3.20074 7.71029 2.99887 8.97616 3 10.25C3 15.842 6.824 20.54 12 21.872C17.176 20.54 21 15.842 21 10.25C21 8.93999 20.79 7.67999 20.402 6.49999H20.25C17.054 6.49999 14.15 5.24999 12 3.21399ZM12 16.25H12.008V16.258H12V16.25Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg></div><div>Secrets, SCA &amp; SAST</div></a></div></div><div id="w-node-_12ac9458-6c42-b54c-1cad-33865b0bb884-6a4d9875" class="nav_benchmark-content"><div class="w-embed"><style>
+@media screen and (max-width: 991px) {
+  .nav_benchmark-content h3, .nav_benchmark-content p {
+    color:inherit;
+  }
+}
+@media screen and (min-width: 991px) {
+   .nav_benchmark-content .tag-span {
+   	color: var(--_themes---colours--white);
+    border-color: var(--_themes---colours--white);
+  }
+}
+</style></div><a href="/platform/global-benchmark" class="nav_menu-header w-inline-block"><img src="https://cdn.prod.website-files.com/6810e237f744f9c0338e055e/683096e8aaeb82e57815545d_256px__BO_Brand_Icons__Benchmark%20PRO%20(coloured).svg" loading="lazy" alt="BlueOptima Global Benchmark Icon" class="product_icon u-nav-small"/><h3 class="h3 xs u-white-text u-mb-0">Global Benchmark</h3></a><p class="u-bold u-mb-0 u-white-text">Compare Developer Performance</p><div class="w-layout-vflex nav_product-link-parent"><a href="/platform/global-benchmark" class="nav_platform-sublink u-white-link w-inline-block"><div class="nav_small-icon cc-lt-blue w-embed"><svg width="1.6em" height="1.3em" viewBox="0 0 20 17" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M11.5 0.839844L19 8.33984M19 8.33984L11.5 15.8398M19 8.33984H1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg></div><div>How it works</div></a><a href="/resources/global-benchmark-report-locked" class="nav_platform-sublink u-white-link w-inline-block"><div class="nav_small-icon cc-lt-blue w-embed"><svg width="1.6em" height="1.65em" viewBox="0 0 24 25" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M3 13.4648C3 12.8438 3.504 12.3398 4.125 12.3398H6.375C6.996 12.3398 7.5 12.8438 7.5 13.4648V20.2148C7.5 20.8358 6.996 21.3398 6.375 21.3398H4.125C3.82663 21.3398 3.54048 21.2213 3.3295 21.0103C3.11853 20.7994 3 20.5132 3 20.2148V13.4648ZM9.75 8.96484C9.75 8.34384 10.254 7.83984 10.875 7.83984H13.125C13.746 7.83984 14.25 8.34384 14.25 8.96484V20.2148C14.25 20.8358 13.746 21.3398 13.125 21.3398H10.875C10.5766 21.3398 10.2905 21.2213 10.0795 21.0103C9.86853 20.7994 9.75 20.5132 9.75 20.2148V8.96484ZM16.5 4.46484C16.5 3.84384 17.004 3.33984 17.625 3.33984H19.875C20.496 3.33984 21 3.84384 21 4.46484V20.2148C21 20.8358 20.496 21.3398 19.875 21.3398H17.625C17.3266 21.3398 17.0405 21.2213 16.8295 21.0103C16.6185 20.7994 16.5 20.5132 16.5 20.2148V4.46484Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg></div><div>Interactive Report <span class="tag-span u-medium">new</span></div></a></div></div><div class="nav_mega-v2-product"><a href="/platform/talent-insights" class="nav_menu-header w-inline-block"><img src="https://cdn.prod.website-files.com/6810e237f744f9c0338e055e/68136ff542ce1ea1f61cea6f_f3aedf9518d59d52605bfd244121e436_talent-insights-icon.svg" loading="lazy" alt="Talent Insights Icon" class="product_icon u-nav-small"/><h3 class="h3 xs u-primary-text u-mb-0">Talent Insights</h3></a><p class="u-bold u-mb-0">Hiring Tools</p><div class="w-layout-vflex nav_product-link-parent"><a href="/platform/talent-insights#navbar-trigger" class="nav_platform-sublink w-inline-block"><div class="nav_small-icon w-embed"><svg xmlns="http://www.w3.org/2000/svg" width="1.8em" height="1.8em" viewBox="0 0 24 25" fill="none">
+  <path d="M11 21.5L15.5 17M15.5 17L11 12.5M15.5 17H2M18 3.5L22.5 8M22.5 8L18 12.5M22.5 8H9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg></div><div>Predictive Hiring</div></a><a href="/platform/talent-insights#internal-talent-scout" class="nav_platform-sublink w-inline-block"><div class="nav_small-icon w-embed"><svg xmlns="http://www.w3.org/2000/svg" width="1.8em" height="1.8em" viewBox="0 0 24 25" fill="none">
+  <path d="M15 9.5H18.75M15 12.5H18.75M15 15.5H18.75M4.5 20H19.5C20.0967 20 20.669 19.7629 21.091 19.341C21.5129 18.919 21.75 18.3467 21.75 17.75V7.25C21.75 6.65326 21.5129 6.08097 21.091 5.65901C20.669 5.23705 20.0967 5 19.5 5H4.5C3.90326 5 3.33097 5.23705 2.90901 5.65901C2.48705 6.08097 2.25 6.65326 2.25 7.25V17.75C2.25 18.3467 2.48705 18.919 2.90901 19.341C3.33097 19.7629 3.90326 20 4.5 20ZM10.5 9.875C10.5 10.1212 10.4515 10.365 10.3573 10.5925C10.263 10.82 10.1249 11.0267 9.95083 11.2008C9.77672 11.3749 9.57002 11.513 9.34253 11.6073C9.11505 11.7015 8.87123 11.75 8.625 11.75C8.37877 11.75 8.13495 11.7015 7.90747 11.6073C7.67998 11.513 7.47328 11.3749 7.29917 11.2008C7.12506 11.0267 6.98695 10.82 6.89273 10.5925C6.7985 10.365 6.75 10.1212 6.75 9.875C6.75 9.37772 6.94754 8.90081 7.29917 8.54918C7.65081 8.19754 8.12772 8 8.625 8C9.12228 8 9.59919 8.19754 9.95082 8.54918C10.3025 8.90081 10.5 9.37772 10.5 9.875ZM11.794 16.211C10.8183 16.7307 9.72947 17.0017 8.624 17C7.5192 17.0014 6.4311 16.7304 5.456 16.211C5.69429 15.5622 6.12594 15.0023 6.69267 14.6067C7.25939 14.2111 7.93387 13.999 8.625 13.999C9.31613 13.999 9.99061 14.2111 10.5573 14.6067C11.1241 15.0023 11.5557 15.5622 11.794 16.211Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg></div><div>Internal Talent Scout</div></a></div></div><div class="nav_mega-v2-product"><a href="/platform/active-multisite" class="nav_menu-header w-inline-block"><img src="https://cdn.prod.website-files.com/6810e237f744f9c0338e055e/688b4f5b3b476e3b54b9da53_multisite-icon.svg" loading="lazy" alt="" class="product_icon u-nav-small"/><h3 class="h3 xs u-primary-text u-mb-0">Active MultiSite</h3></a><p class="u-bold u-mb-0">Global Version Control</p><div class="w-layout-vflex nav_product-link-parent"><a href="/platform/multisite/gerrit-active-multisite" class="nav_platform-sublink w-inline-block"><div class="nav_small-icon w-embed"><svg xmlns="http://www.w3.org/2000/svg" width="2em" height="2em" viewBox="0 0 24 25" fill="none">
+  <path d="M13.5 17.375H16.875M16.875 17.375H20.25M16.875 17.375V14M16.875 17.375V20.75M6 11H8.25C8.84674 11 9.41903 10.7629 9.84099 10.341C10.2629 9.91903 10.5 9.34674 10.5 8.75V6.5C10.5 5.90326 10.2629 5.33097 9.84099 4.90901C9.41903 4.48705 8.84674 4.25 8.25 4.25H6C5.40326 4.25 4.83097 4.48705 4.40901 4.90901C3.98705 5.33097 3.75 5.90326 3.75 6.5V8.75C3.75 9.34674 3.98705 9.91903 4.40901 10.341C4.83097 10.7629 5.40326 11 6 11ZM6 20.75H8.25C8.84674 20.75 9.41903 20.5129 9.84099 20.091C10.2629 19.669 10.5 19.0967 10.5 18.5V16.25C10.5 15.6533 10.2629 15.081 9.84099 14.659C9.41903 14.2371 8.84674 14 8.25 14H6C5.40326 14 4.83097 14.2371 4.40901 14.659C3.98705 15.081 3.75 15.6533 3.75 16.25V18.5C3.75 19.0967 3.98705 19.669 4.40901 20.091C4.83097 20.5129 5.40326 20.75 6 20.75ZM15.75 11H18C18.5967 11 19.169 10.7629 19.591 10.341C20.0129 9.91903 20.25 9.34674 20.25 8.75V6.5C20.25 5.90326 20.0129 5.33097 19.591 4.90901C19.169 4.48705 18.5967 4.25 18 4.25H15.75C15.1533 4.25 14.581 4.48705 14.159 4.90901C13.7371 5.33097 13.5 5.90326 13.5 6.5V8.75C13.5 9.34674 13.7371 9.91903 14.159 10.341C14.581 10.7629 15.1533 11 15.75 11Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg></div><div>Gerrit</div></a><a href="/platform/multisite/git-active-multisite" class="nav_platform-sublink w-inline-block"><div class="nav_small-icon w-embed"><svg xmlns="http://www.w3.org/2000/svg" width="1.8em" height="1.8em" viewBox="0 0 24 25" fill="none">
+  <path d="M17.25 7.25L22.5 12.5L17.25 17.75M6.75 17.75L1.5 12.5L6.75 7.25M14.25 4.25L9.75 20.75" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg></div><div>Git</div></a><a href="/platform/multisite/subversion-active-multisite" class="nav_platform-sublink w-inline-block"><div class="nav_small-icon w-embed"><svg xmlns="http://www.w3.org/2000/svg" width="1.8em" height="1.8em" viewBox="0 0 24 25" fill="none">
+  <path d="M3 8.75V18.5C3 19.0967 3.23705 19.669 3.65901 20.091C4.08097 20.5129 4.65326 20.75 5.25 20.75H18.75C19.3467 20.75 19.919 20.5129 20.341 20.091C20.7629 19.669 21 19.0967 21 18.5V8.75M3 8.75V6.5C3 5.90326 3.23705 5.33097 3.65901 4.90901C4.08097 4.48705 4.65326 4.25 5.25 4.25H18.75C19.3467 4.25 19.919 4.48705 20.341 4.90901C20.7629 5.33097 21 5.90326 21 6.5V8.75M3 8.75H21M5.25 6.5H5.258V6.508H5.25V6.5ZM7.5 6.5H7.508V6.508H7.5V6.5ZM9.75 6.5H9.758V6.508H9.75V6.5Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg></div><div>Subversion</div></a><a href="/platform/multisite/access-control-plus" class="nav_platform-sublink w-inline-block"><div class="nav_small-icon w-embed"><svg xmlns="http://www.w3.org/2000/svg" width="1.8em" height="1.8em" viewBox="0 0 24 25" fill="none">
+  <path d="M15.75 5.74996C16.5456 5.74996 17.3087 6.06603 17.8713 6.62864C18.4339 7.19125 18.75 7.95431 18.75 8.74996M21.75 8.74996C21.7501 9.62507 21.5588 10.4896 21.1895 11.283C20.8202 12.0764 20.2818 12.7793 19.6121 13.3426C18.9424 13.9059 18.1575 14.3159 17.3126 14.5438C16.4677 14.7717 15.5831 14.812 14.721 14.662C14.158 14.565 13.562 14.688 13.158 15.092L10.5 17.75H8.25V20H6V22.25H2.25V19.432C2.25 18.835 2.487 18.262 2.909 17.841L9.408 11.342C9.812 10.938 9.935 10.342 9.838 9.77896C9.6962 8.96012 9.72604 8.12076 9.92563 7.31406C10.1252 6.50737 10.4902 5.75093 10.9975 5.09268C11.5047 4.43444 12.1432 3.88875 12.8724 3.4902C13.6016 3.09164 14.4057 2.84891 15.2336 2.77739C16.0616 2.70587 16.8953 2.80712 17.6821 3.07472C18.4688 3.34232 19.1914 3.77044 19.8041 4.33194C20.4167 4.89344 20.906 5.57609 21.241 6.3366C21.5759 7.09712 21.7493 7.91894 21.75 8.74996Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg></div><div>Access Control Plus</div></a></div><p class="u-bold u-mb-0">Resources</p><div class="w-layout-vflex nav_product-link-parent"><a href="/resources/active-multisite/svn-binaries" class="nav_platform-sublink w-inline-block"><div class="nav_small-icon w-embed"><svg xmlns="http://www.w3.org/2000/svg" width="1.7em" height="1.7em" viewBox="0 0 24 25" fill="none">
+  <path d="M3 17V19.25C3 19.8467 3.23705 20.419 3.65901 20.841C4.08097 21.2629 4.65326 21.5 5.25 21.5H18.75C19.3467 21.5 19.919 21.2629 20.341 20.841C20.7629 20.419 21 19.8467 21 19.25V17M16.5 12.5L12 17M12 17L7.5 12.5M12 17V3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg></div><div>SVN Binaries</div></a><a href="/resources/active-multisite/git-binaries" class="nav_platform-sublink w-inline-block"><div class="nav_small-icon w-embed"><svg xmlns="http://www.w3.org/2000/svg" width="1.7em" height="1.7em" viewBox="0 0 24 25" fill="none">
+  <path d="M3 17V19.25C3 19.8467 3.23705 20.419 3.65901 20.841C4.08097 21.2629 4.65326 21.5 5.25 21.5H18.75C19.3467 21.5 19.919 21.2629 20.341 20.841C20.7629 20.419 21 19.8467 21 19.25V17M16.5 12.5L12 17M12 17L7.5 12.5M12 17V3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg></div><div>Git Binaries</div></a><a href="https://docs.blueoptima.com/docs/Products/Active_MultiSite/" target="_blank" class="nav_platform-sublink w-inline-block"><div class="nav_small-icon w-embed"><svg xmlns="http://www.w3.org/2000/svg" width="1.8em" height="1.8em" viewBox="0 0 24 25" fill="none">
+  <path d="M16.712 4.82989C17.3117 5.19928 17.8662 5.6376 18.364 6.13589C18.874 6.64589 19.308 7.19989 19.67 7.78789M16.712 4.82989L13.264 8.96789M16.712 4.82989C15.2941 3.96044 13.6633 3.50024 12 3.50024C10.3368 3.50024 8.70593 3.96044 7.28802 4.82989M19.67 7.78789L15.532 11.2359M19.67 7.78789C20.5395 9.20581 20.9997 10.8366 20.9997 12.4999C20.9997 14.1632 20.5395 15.794 19.67 17.2119M13.264 8.96789C13.7862 9.1546 14.2604 9.4552 14.652 9.84789C15.0447 10.2395 15.3453 10.7136 15.532 11.2359M13.264 8.96789C12.4465 8.67654 11.5535 8.67654 10.736 8.96789M7.28802 4.82989L10.736 8.96789M7.28802 4.82989C6.68827 5.19926 6.13382 5.63758 5.63602 6.13589C5.13771 6.63371 4.69939 7.18815 4.33001 7.78789M15.532 11.2359C15.8234 12.0534 15.8234 12.9464 15.532 13.7639M19.67 17.2119L15.532 13.7639M19.67 17.2119C19.3006 17.8116 18.8623 18.3661 18.364 18.8639C17.854 19.3739 17.3 19.8079 16.712 20.1699M15.532 13.7639C15.351 14.2699 15.057 14.7459 14.652 15.1519C14.2604 15.5446 13.7863 15.8452 13.264 16.0319M10.736 8.96789C10.2138 9.15457 9.73963 9.45517 9.34801 9.84789C8.94301 10.2539 8.64902 10.7299 8.46802 11.2359M13.264 16.0319L16.712 20.1699M13.264 16.0319C12.4465 16.3233 11.5535 16.3233 10.736 16.0319M16.712 20.1699C15.2941 21.0393 13.6633 21.4995 12 21.4995C10.3368 21.4995 8.70593 21.0393 7.28802 20.1699M7.28802 20.1699L10.736 16.0319M7.28802 20.1699C6.68827 19.8005 6.13382 19.3622 5.63602 18.8639C5.13772 18.3661 4.69941 17.8116 4.33001 17.2119M10.736 16.0319C10.2138 15.8452 9.73963 15.5446 9.34801 15.1519C8.95532 14.7603 8.65472 14.2861 8.46802 13.7639M8.46802 13.7639L4.33001 17.2119M8.46802 13.7639C8.17666 12.9464 8.17666 12.0534 8.46802 11.2359M4.33001 17.2119C3.46056 15.794 3.00037 14.1632 3.00037 12.4999C3.00037 10.8366 3.46056 9.20581 4.33001 7.78789M4.33001 7.78789L8.46802 11.2359" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg></div><div>Support Docs</div></a><a href="/resources/active-multisite/videos" class="nav_platform-sublink w-inline-block"><div class="nav_small-icon w-embed"><svg xmlns="http://www.w3.org/2000/svg" width="1.8em" height="1.8em" viewBox="0 0 24 25" fill="none">
+  <path d="M3 8.75V18.5C3 19.0967 3.23705 19.669 3.65901 20.091C4.08097 20.5129 4.65326 20.75 5.25 20.75H18.75C19.3467 20.75 19.919 20.5129 20.341 20.091C20.7629 19.669 21 19.0967 21 18.5V8.75M3 8.75V6.5C3 5.90326 3.23705 5.33097 3.65901 4.90901C4.08097 4.48705 4.65326 4.25 5.25 4.25H18.75C19.3467 4.25 19.919 4.48705 20.341 4.90901C20.7629 5.33097 21 5.90326 21 6.5V8.75M3 8.75H21M5.25 6.5H5.258V6.508H5.25V6.5ZM7.5 6.5H7.508V6.508H7.5V6.5ZM9.75 6.5H9.758V6.508H9.75V6.5Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg></div><div>Videos</div></a></div></div><div class="nav_benchmark-bg"></div></div></nav></div></li><li class="nav_dd-li"><div data-delay="0" data-hover="false" class="nav_dd cc-static w-dropdown"><div class="nav_link cc-static w-dropdown-toggle"><div>Resources</div><div class="nav_dd-icon w-embed"><svg width="0.8em" height="0.5em" viewBox="0 0 13 8" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M11 2L6.5 6L2 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="square"/>
+</svg></div></div><nav class="nav_dd-list cc-mega w-dropdown-list"><div class="menu_col"><h3 class="h3 xs u-primary-text u-mb-0">Resources</h3><div class="section-divider u-full-width"></div><div class="nav_menu-grid cc-grid2"><a href="/resources" class="nav_sublink w-inline-block"><div class="nav_icon w-embed"><svg width="2em" height="2em" viewBox="0 0 26 26" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M21.3544 21.3543C23.1047 19.604 20.7833 14.4448 16.1693 9.8308C11.5553 5.21685 6.39609 2.89541 4.64578 4.64572C2.89547 6.39603 5.21691 11.5553 9.83086 16.1692C14.4448 20.7832 19.6041 23.1046 21.3544 21.3543Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M16.1693 16.1692C20.7833 11.5552 23.1047 6.39599 21.3544 4.64568C19.6041 2.89536 14.4448 5.21681 9.83086 9.83076C5.21691 14.4447 2.89547 19.604 4.64578 21.3543C6.39609 23.1046 11.5553 20.7831 16.1693 16.1692Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M13 14.2188C13.6731 14.2188 14.2188 13.6731 14.2188 13C14.2188 12.3269 13.6731 11.7812 13 11.7812C12.3269 11.7812 11.7812 12.3269 11.7812 13C11.7812 13.6731 12.3269 14.2188 13 14.2188Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg></div><div><p class="u-bold u-mb-0">Research &amp; Reports</p><p class="ps u-mb-0">Data-driven insights you won&#x27;t find elsewhere</p></div></a><a href="/blog" class="nav_sublink w-inline-block"><div class="nav_icon w-embed"><svg width="2em" height="2em" viewBox="0 0 26 26" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M2.4375 5.6875H4.0625" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M12.1875 5.6875H13.8125" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M2.4375 13.8125H4.875" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M11.375 13.8125H13.8125" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M17.0625 10.5625H23.5625" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M17.0625 13.8125H23.5625" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M8.125 17.0625H23.5625" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M8.125 20.3125H23.5625" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M4.0625 13.8125V5.6875L8.125 12.1875L12.1875 5.6875V13.8125" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg></div><div><p class="u-bold u-mb-0">Blog</p><p class="ps u-mb-0">In-depth analysis and practical tips</p></div></a></div></div><div class="_1em-spacer"></div><div class="menu_col"><h3 class="h3 xs u-primary-text u-mb-0">Tools</h3><div class="section-divider u-full-width"></div><div class="nav_menu-grid cc-grid2"><a href="/resources/global-benchmark-report-locked" class="nav_sublink w-inline-block"><div class="nav_icon w-embed"><svg width="2em" height="2em" viewBox="0 0 26 26" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M21.3544 21.3543C23.1047 19.604 20.7833 14.4448 16.1693 9.8308C11.5553 5.21685 6.39609 2.89541 4.64578 4.64572C2.89547 6.39603 5.21691 11.5553 9.83086 16.1692C14.4448 20.7832 19.6041 23.1046 21.3544 21.3543Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M16.1693 16.1692C20.7833 11.5552 23.1047 6.39599 21.3544 4.64568C19.6041 2.89536 14.4448 5.21681 9.83086 9.83076C5.21691 14.4447 2.89547 19.604 4.64578 21.3543C6.39609 23.1046 11.5553 20.7831 16.1693 16.1692Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M13 14.2188C13.6731 14.2188 14.2188 13.6731 14.2188 13C14.2188 12.3269 13.6731 11.7812 13 11.7812C12.3269 11.7812 11.7812 12.3269 11.7812 13C11.7812 13.6731 12.3269 14.2188 13 14.2188Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg></div><div><p class="u-bold u-mb-0">Interactive Global Benchmark</p><p class="ps u-mb-0">Compare developer productivity trends and track key drivers of performance</p></div></a><a href="https://ai-code-detector.io/?ref=WebsiteNavigation" target="_blank" class="nav_sublink w-inline-block"><div class="nav_icon w-embed"><svg width="2em" height="2em" viewBox="0 0 26 26" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M8.55841 17.4416L2.96334 15.3798C2.80906 15.3229 2.67594 15.22 2.58192 15.0851C2.48791 14.9502 2.4375 14.7897 2.4375 14.6252C2.4375 14.4608 2.48791 14.3003 2.58192 14.1654C2.67594 14.0304 2.80906 13.9276 2.96334 13.8706L8.55841 11.8089L10.6201 6.21382C10.6771 6.05955 10.7799 5.92643 10.9149 5.83241C11.0498 5.73839 11.2103 5.68799 11.3747 5.68799C11.5392 5.68799 11.6997 5.73839 11.8346 5.83241C11.9695 5.92643 12.0724 6.05955 12.1294 6.21382L14.1911 11.8089L19.7861 13.8706C19.9404 13.9276 20.0735 14.0304 20.1676 14.1654C20.2616 14.3003 20.312 14.4608 20.312 14.6252C20.312 14.7897 20.2616 14.9502 20.1676 15.0851C20.0735 15.22 19.9404 15.3229 19.7861 15.3798L14.1911 17.4416L12.1294 23.0366C12.0724 23.1909 11.9695 23.324 11.8346 23.418C11.6997 23.5121 11.5392 23.5625 11.3747 23.5625C11.2103 23.5625 11.0498 23.5121 10.9149 23.418C10.7799 23.324 10.6771 23.1909 10.6201 23.0366L8.55841 17.4416Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M17.875 1.625V6.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M22.75 7.3125V10.5625" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M15.4375 4.0625H20.3125" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M21.125 8.9375H24.375" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg></div><div><p class="u-bold u-mb-0">AI Code Detector</p><p class="ps u-mb-0">Upload a file to identify AI-written code</p></div></a><a href="https://ai-cost.blueoptima.com/?ref=WebsiteNavigation" target="_blank" class="nav_sublink w-inline-block"><div class="nav_icon w-embed"><svg width="2em" height="2em" viewBox="0 0 26 26" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M13 2.4375V23.5625" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M18.6875 8.9375C18.6875 8.404 18.5824 7.87573 18.3783 7.38285C18.1741 6.88996 17.8749 6.44212 17.4976 6.06488C17.1204 5.68764 16.6725 5.3884 16.1797 5.18424C15.6868 4.98008 15.1585 4.875 14.625 4.875H11.375C10.2976 4.875 9.26425 5.30301 8.50238 6.06488C7.74051 6.82675 7.3125 7.86006 7.3125 8.9375C7.3125 10.0149 7.74051 11.0483 8.50238 11.8101C9.26425 12.572 10.2976 13 11.375 13H15.4375C16.5149 13 17.5483 13.428 18.3101 14.1899C19.072 14.9517 19.5 15.9851 19.5 17.0625C19.5 18.1399 19.072 19.1733 18.3101 19.9351C17.5483 20.697 16.5149 21.125 15.4375 21.125H10.5625C9.48506 21.125 8.45175 20.697 7.68988 19.9351C6.92801 19.1733 6.5 18.1399 6.5 17.0625" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg></div><div><p class="u-bold u-mb-0">AI Refactoring Cost</p><p class="ps u-mb-0">Calculate the real cost of AI code refactoring</p></div></a><a href="/resources/active-multisite/value-calculator" class="nav_sublink w-inline-block"><div class="nav_icon w-embed"><svg width="2em" height="2em" viewBox="0 0 26 26" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M13 2.4375V23.5625" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M18.6875 8.9375C18.6875 8.404 18.5824 7.87573 18.3783 7.38285C18.1741 6.88996 17.8749 6.44212 17.4976 6.06488C17.1204 5.68764 16.6725 5.3884 16.1797 5.18424C15.6868 4.98008 15.1585 4.875 14.625 4.875H11.375C10.2976 4.875 9.26425 5.30301 8.50238 6.06488C7.74051 6.82675 7.3125 7.86006 7.3125 8.9375C7.3125 10.0149 7.74051 11.0483 8.50238 11.8101C9.26425 12.572 10.2976 13 11.375 13H15.4375C16.5149 13 17.5483 13.428 18.3101 14.1899C19.072 14.9517 19.5 15.9851 19.5 17.0625C19.5 18.1399 19.072 19.1733 18.3101 19.9351C17.5483 20.697 16.5149 21.125 15.4375 21.125H10.5625C9.48506 21.125 8.45175 20.697 7.68988 19.9351C6.92801 19.1733 6.5 18.1399 6.5 17.0625" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg></div><div><p class="u-bold u-mb-0">Active MultiSite Value Calculator</p><p class="ps u-mb-0">What is version control costing you?</p><div class="badge cc-sm-top-right">new</div></div></a></div></div></nav></div></li><li class="nav_dd-li"><div data-delay="0" data-hover="false" class="nav_dd w-dropdown"><div class="nav_link w-dropdown-toggle"><div>Company</div><div class="nav_dd-icon w-embed"><svg width="0.8em" height="0.5em" viewBox="0 0 13 8" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M11 2L6.5 6L2 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="square"/>
+</svg></div></div><nav class="nav_dd-list w-dropdown-list"><ul role="list" class="nav_dd-ul w-list-unstyled"><li class="menu_li"><a href="/company/about-us" class="nav_dd-link w-dropdown-link">About us</a></li><li class="menu_li"><a href="/company/careers" class="nav_dd-link w-dropdown-link">Careers</a></li><li class="menu_li"><a href="/company/partner-enquiry" class="nav_dd-link w-dropdown-link">Become a Partner</a></li><li class="menu_li"><a href="/company/contact-us" class="nav_dd-link w-dropdown-link">Contact</a></li><li class="menu_li"><a href="https://app.drata.com/trust/9cbc43d7-0c38-11ee-865f-029d78a187d9" target="_blank" class="nav_dd-link w-inline-block"><div>Trust Centre</div><div class="w-embed"><svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 20 19" fill="none">
+  <path d="M14.7051 13.8562L14.7051 4.75629L5.60517 4.7563" stroke="currentColor" stroke-width="1.5" stroke-linecap="square"/>
+  <line x1="14.5255" y1="4.8846" x2="5.19166" y2="14.2184" stroke="currentColor" stroke-width="1.5"/>
+</svg></div></a></li></ul></nav></div></li><li class="nav_dd-li"><div data-delay="0" data-hover="false" class="nav_dd w-dropdown"><div class="nav_link w-dropdown-toggle"><div>Services</div><div class="nav_dd-icon w-embed"><svg width="0.8em" height="0.5em" viewBox="0 0 13 8" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M11 2L6.5 6L2 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="square"/>
+</svg></div></div><nav class="nav_dd-list w-dropdown-list"><ul role="list" class="nav_dd-ul w-list-unstyled"><li class="menu_li"><a href="/support/professional-services" class="nav_dd-link w-dropdown-link">Professional Services</a></li><li class="menu_li"><a href="/support/apache-subversion" class="nav_dd-link w-dropdown-link">Apache SVN Support</a></li><li class="menu_li"><a href="/support/gerrit-support-package" class="nav_dd-link w-dropdown-link">Gerrit Support</a></li></ul></nav></div></li><li class="nav_dd-li u-desktop-hide"><div class="menu_divider"></div></li></ul><div class="nav_mobile-buttons"><div class="button-holder"><a href="https://uix.blueoptima.com/uix/login" target="_blank" class="master-button cc-outlined-1 w-inline-block"><div>Login</div><div class="w-embed"><svg xmlns="http://www.w3.org/2000/svg" width="0.9em" height="0.9em" viewBox="0 0 20 19" fill="none">
+  <path d="M14.7051 13.8562L14.7051 4.75629L5.60517 4.7563" stroke="currentColor" stroke-width="2" stroke-linecap="square"></path>
+  <line x1="14.5255" y1="4.8846" x2="5.19166" y2="14.2184" stroke="currentColor" stroke-width="2"></line>
+</svg></div></a><a href="/demo" class="master-button w-inline-block"><div>Book a Demo</div></a></div></div></div></div><div class="button-holder nav"><button type="button" class="theme-toggle" aria-label="Switch to dark theme" aria-pressed="false"><svg class="theme-toggle-moon" width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M16.5 12.3A7 7 0 0 1 7.7 3.5a7 7 0 1 0 8.8 8.8z" stroke-linejoin="round"></path></svg><svg class="theme-toggle-sun" width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="10" cy="10" r="3.5"></circle><path d="M10 1.5v2M10 16.5v2M1.5 10h2M16.5 10h2M4 4l1.4 1.4M14.6 14.6L16 16M4 16l1.4-1.4M14.6 5.4L16 4" stroke-linecap="round"></path></svg></button><a href="https://uix.blueoptima.com/uix/login" class="master-button u-medium cc-outlined-1 w-inline-block"><div>Login</div></a><a data-optibase-click-conversion-id="demo_button" data-css-id="nav-demo-button" href="/demo" class="master-button u-medium w-inline-block"><div>Book a Demo</div></a></div><a id="menu-trigger" data-w-id="7b161dc1-aed5-e4d3-3c22-5fff6a4d98d6" href="#" class="nav__menu-parent w-node-_7b161dc1-aed5-e4d3-3c22-5fff6a4d98d6-6a4d9875 w-inline-block"><div class="menu__icon-wrapper"><div class="menu__icon-top"></div><div class="menu__icon-middle"></div><div class="menu__icon-bottom"></div></div></a></div></div><div class="nav_backdrop"></div><div><div class="w-dyn-list"><div role="list" class="w-dyn-items"><div role="listitem" class="w-dyn-item"><div data-w-id="c1033133-2e17-9ff6-a282-4ae3f4dc3c19" class="nav_top-banner"><div class="nav_banner-content"><div class="nav_banner-icon w-embed"><svg width="1.2em" height="1.2em" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M19.175 4.125C16.4223 5.53493 13.4215 6.39592 10.34 6.66C9.652 6.72 8.954 6.75 8.25 6.75H7.5C6.30653 6.75 5.16193 7.22411 4.31802 8.06802C3.47411 8.91193 3 10.0565 3 11.25C3 12.4435 3.47411 13.5881 4.31802 14.432C5.16193 15.2759 6.30653 15.75 7.5 15.75H8.25C8.954 15.75 9.652 15.78 10.34 15.84M10.34 15.84C10.593 16.802 10.924 17.732 11.325 18.623C11.572 19.173 11.385 19.833 10.862 20.134L10.205 20.514C9.654 20.832 8.945 20.631 8.678 20.053C8.04429 18.682 7.56146 17.2463 7.238 15.771M10.34 15.84C9.94698 14.3417 9.74868 12.799 9.75 11.25C9.75 9.664 9.955 8.126 10.34 6.66M10.34 15.84C13.4215 16.1041 16.4222 16.9651 19.175 18.375M19.175 4.125C19.719 5.87844 20.0592 7.6887 20.189 9.52C20.2711 10.6719 20.2711 11.8281 20.189 12.98C20.0592 14.8113 19.719 16.6216 19.175 18.375C19.057 18.755 18.93 19.129 18.795 19.5M19.175 4.125C19.0577 3.74689 18.931 3.37177 18.795 3M20.189 9.52C20.684 9.933 21 10.555 21 11.25C21 11.945 20.684 12.567 20.189 12.98" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
+</div><a href="/resource/blueoptima-global-benchmark-q3-2026" class="nav_banner-text u-max-width-80-mobile">Get the latest productivity and quality data with the BlueOptima Global Benchmark Q3 2026 </a><div class="nav_banner-icon w-embed"><svg width="1em" height="1em" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M6 12L10 8L6 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
+
+</div><div data-w-id="7962c3c6-30f8-281f-98bf-4211f7fd08d6" class="nav_banner-close w-embed"><svg width="1em" height="1em" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M1 17L17 1" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M17 17L1 1" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg></div></div></div></div></div></div></div></div></header>
+
+<main id="main">
+  <!-- LOCAL PREVIEW ONLY: a stand-in for the native Webflow hero on the LLM Rankings page. -->
+  <div class="home_hero"><div class="page_grid-bg"></div><div class="global-div"><div class="hero cc-component no-grid"><div class="container_50em u-left-align">
+    <div class="badge_holder u-mb-2em"><div data-wf--eyebrow-badge--variant="white" class="badge w-variant-0f414a01-275f-c723-8cac-a6f570fae32c"><div class="badge-text">LLM Rankings</div></div><div data-wf--eyebrow-badge--variant="white" class="badge w-variant-0f414a01-275f-c723-8cac-a6f570fae32c"><div class="badge-text">{date}</div></div></div>
+    <h1 class="h1 _2xl"><strong>BARE</strong> Benchmark.</h1>
+    <p class="pl u-mb-0">Can LLMs deliver clean code? BARE tests <strong data-value="count">102</strong> AI coding tool models on real production files with known maintainability problems. Use the benchmark to compare how models perform, and base your rollout strategy on hard evidence.</p>
+    <div class="btn-hold u-mt-medium u-mb-2em"><a data-wf--button--variant="base" href="/demo" target="_blank" class="master-button w-inline-block"><div>Book a Call</div></a><a data-wf--button--variant="outlined" href="#how-it-works" class="master-button w-variant-f1840367-83c0-3fd8-1877-4977fc700645 w-inline-block"><div>See how it works</div></a></div>
+  </div></div></div><div class="section-gradient cc-white-grey"></div></div>
+  <!-- /LOCAL PREVIEW ONLY -->
+
+  <!-- Each WEBFLOW EMBED block below builds one snippet, named after its START marker. Everything outside them is a local stand-in. -->
+  <!-- WEBFLOW EMBED START: 2a-chart -->
+  <div class="bare" id="bare">
+  <div class="global-div">
+    <!-- ============ CHART ============ -->
+    <section class="chart-card" id="chart-card" aria-labelledby="chart-title">
+      <div class="chart-head">
+        <div>
+          <h2 id="chart-title" data-text="chartTitle"></h2>
+          <p id="chart-sub"></p>
+        </div>
+        <div class="tabs" role="group" aria-label="Chart view">
+          <button type="button" data-mode="field" aria-pressed="true" data-label="tabField">Ranking</button>
+          <button type="button" data-mode="developer" aria-pressed="false" data-label="tabDeveloper">By AI lab</button>
+          <button type="button" data-mode="returned" aria-pressed="false" data-label="tabReturned">vs. files returned</button>
+          <button type="button" data-mode="effort" aria-pressed="false" data-label="tabEffort">vs. coding effort</button>
+        </div>
+      </div>
+      <div class="chart-tools">
+        <div class="legend" id="legend"></div>
+        <div class="colour-by" role="group" aria-label="Colour dots by">
+          <span data-label="colourLabel">Colour by</span>
+          <div class="seg">
+            <button type="button" data-colour="region" aria-pressed="true" data-label="colourOrigin">Origin</button>
+            <button type="button" data-colour="weights" aria-pressed="false" data-label="colourWeights">Open or closed</button>
+          </div>
+        </div>
+        <div class="zoom" role="group" aria-label="Zoom chart">
+          <button type="button" class="zoom-lead" id="zoom-lead" data-label="zoomLead">Leading group</button>
+          <div class="zoom-seg">
+            <button type="button" id="zoom-out" aria-label="Zoom out">−</button>
+            <button type="button" id="zoom-reset" data-label="zoomReset">Reset</button>
+            <button type="button" id="zoom-in" aria-label="Zoom in">+</button>
+          </div>
+        </div>
+      </div>
+      <div class="chart-wrap" id="chart-wrap">
+        <svg id="chart" role="img" aria-label="Chart of refactoring success rate for every model">
+          <g class="ax-layer"></g><g class="band-layer"></g><g class="dots"></g><g class="marks-layer"></g>
+        </svg>
+        <div class="tooltip" id="tooltip" aria-hidden="true"></div>
+      </div>
+      <p class="zoom-hint" id="zoom-hint" data-label="zoomHint" hidden></p>
+      <div class="dev-chips" id="dev-chips" role="group" aria-label="Focus on an AI lab"></div>
+      <p class="chart-note" data-text="chartNote"></p>
+    </section>
+
+  </div>
+  </div>
+  <!-- WEBFLOW EMBED END -->
+
+  <!-- LOCAL PREVIEW ONLY: section 01 is a native Webflow section with its own heading. The model selector embed sits inside it. -->
+  <section class="global-section" id="explore"><div class="global-div">
+  <!-- WEBFLOW EMBED START: 2b-explore -->
+  <div class="bare bare-tool">
+      <div class="finder">
+        <div class="combo" id="combo-main">
+          <label for="model-input" data-label="finderLabel">Model</label>
+          <svg class="ico" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="9" cy="9" r="6"></circle><path d="M14 14l4 4" stroke-linecap="round"></path></svg>
+          <input id="model-input" type="text" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="model-list" placeholder="Search, e.g. Claude, GPT, Kimi" autocomplete="off" data-label-ph="finderPlaceholder">
+          <button type="button" class="clear" aria-label="Clear model">×</button>
+          <ul class="listbox" id="model-list" role="listbox" hidden=""></ul>
+        </div>
+      </div>
+      <div class="quick" id="quick-picks"></div>
+
+      <div class="result-empty" id="result-empty">
+        <div class="glyph" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+        <div><h3 data-text="emptyTitle"></h3><p data-text="emptyBody"></p></div>
+      </div>
+
+      <div class="result" id="result" hidden="">
+        <div class="r-left">
+          <p class="r-dev" id="r-dev"></p>
+          <p class="r-name" id="r-name"></p>
+          <p class="r-big num" id="r-big" aria-live="polite"></p>
+          <p class="r-caption" id="r-caption"></p>
+          <span class="tier" id="r-tier"></span>
+          <div class="waffle-wrap">
+            <p class="waffle-title" data-text="waffleTitle"></p>
+            <div class="waffle" id="waffle" role="img"></div>
+            <div class="waffle-key" id="waffle-key"></div>
+          </div>
+        </div>
+        <div class="r-right">
+          <dl class="facts">
+            <div class="fact"><dt data-text="factRank"></dt><dd class="num" id="r-rank"></dd></div>
+            <div class="fact"><dt data-text="factReturned"></dt><dd class="num" id="r-gen"></dd></div>
+            <div class="fact"><dt data-text="factEffort"></dt><dd class="num" id="r-effort"></dd></div>
+          </dl>
+          <ul class="notes" id="r-notes"></ul>
+          <div class="compare-box">
+            <div class="combo small" id="combo-cmp">
+              <label for="cmp-input" data-label="compareLabel">Compare head to head</label>
+              <svg class="ico" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="9" cy="9" r="6"></circle><path d="M14 14l4 4" stroke-linecap="round"></path></svg>
+              <input id="cmp-input" type="text" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="cmp-list" placeholder="Pick a second model" autocomplete="off" data-label-ph="comparePlaceholder">
+              <button type="button" class="clear" aria-label="Clear comparison">×</button>
+              <ul class="listbox" id="cmp-list" role="listbox" hidden=""></ul>
+            </div>
+            <div id="cmp-out" aria-live="polite"></div>
+          </div>
+        </div>
+      </div>
+  </div>
+  <!-- WEBFLOW EMBED END -->
+  </div></section>
+
+  <!-- LOCAL PREVIEW ONLY: section 02 is a native Webflow section with its own heading. The results table embed sits inside it. -->
+  <section class="global-section" id="results"><div class="global-div">
+  <!-- WEBFLOW EMBED START: 2c-results -->
+  <div class="bare bare-tool">
+      <div class="table-tools">
+        <label class="sr-only" for="t-search">Search models</label>
+        <input type="search" id="t-search" placeholder="Search models or AI labs" data-label-ph="tableSearch">
+        <label class="sr-only" for="t-origin">AI lab origin</label>
+        <select id="t-origin"><option value="">All origins</option></select>
+        <label class="sr-only" for="t-weights">Open or closed</label>
+        <select id="t-weights"><option value="">Open and closed</option><option value="Open">Open-weight</option><option value="Closed">Closed</option></select>
+        <span class="count" id="t-count" aria-live="polite"></span>
+      </div>
+      <div class="table-card">
+        <div class="table-scroll">
+          <table class="board" id="board">
+            <thead>
+              <tr>
+                <th scope="col" data-key="rank" aria-sort="ascending"><button type="button" data-label="thRank">Rank</button></th>
+                <th scope="col" data-key="name"><button type="button" data-label="thModel">Model</button></th>
+                <th scope="col" data-key="developer"><button type="button" data-label="thDeveloper">AI lab</button></th>
+                <th scope="col" data-key="weights"><button type="button" data-label="thWeights">Weights</button></th>
+                <th scope="col" data-key="success" class="bar-cell"><button type="button" data-label="thSuccess">Refactoring success</button></th>
+                <th scope="col" data-key="generation" class="bar-cell"><button type="button" data-label="thReturned">File returned</button></th>
+                <th scope="col" data-key="effort"><button type="button" data-label="thEffort">Avg. effort (h)</button></th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div class="more-row" id="more-row"><button type="button" class="bare-btn btn-ghost" id="t-more"></button></div>
+      </div>
+      <p class="table-foot" data-text="tableFoot"></p>
+  </div>
+  <!-- WEBFLOW EMBED END -->
+  </div></section>
+  <!-- The hero stats and sections 03 to 06 are native Webflow elements. Edit them in the Designer; they are not in this file. -->
+  <!-- LOCAL PREVIEW ONLY: a stand-in for the CTA section on the LLM Rankings page. Its text comes from BARE.text (ctaTitle, ctaBody, ctaButton). -->
+  <section class="global-section"><div class="global-div"><div><div class="rounded-cta variant-c"><div class="relative-div"><div class="container_60em u-text-center">
+    <h2 id="cta-title" data-text="ctaTitle" class="h2 u-white-text">{title}</h2>
+    <p data-text="ctaBody" class="pl u-300-weight">{body}</p>
+    <div class="_2em-spacer"></div>
+    <div class="button-holder"><a data-wf--button--variant="base" href="/talk-to-an-expert" target="_blank" class="master-button w-inline-block"><div>{btn-txt}</div></a></div>
+  </div></div></div></div></div></section>
+  <!-- /LOCAL PREVIEW ONLY -->
+</main>
+
+<!-- LOCAL PREVIEW ONLY: the site footer, copied from the Webflow export. Webflow uses its footer component. -->
+<footer data-wf--footer--variant="base" class="footer__section"><div><div class="popup_campaign"><div class="w-embed w-script"><!-- =====================================================================
+  BlueOptima: Halloween "What's lurking in your code?" popup (Oct 2026)
+  DROP-IN SNIPPET: paste this whole block just before </body>,
+  or load it through Google Tag Manager as a Custom HTML tag.
+
+  - All animation is plain CSS + inline SVG. No images, fonts, libraries or
+    video files to load. Total weight is about 20 KB.
+  - Everything is namespaced .bo-hw-* / boHw*, so it won't clash with site CSS/JS.
+  - Animation switches off automatically for visitors with "reduce motion" set.
+  - The popup removes itself after 31 Oct 2026 23:59 UK time.
+
+  AGENCY TO-DO (search for "TODO"):
+   1. CONFIG.hubspot.formId: the GUID of the HubSpot form (needs an Email field).
+      Submissions go to HubSpot's Forms API as JSON, so no embed script is needed.
+   2. CONFIG.bookingUrl (optional): a HubSpot Meetings link. If set, visitors are
+      sent there after submitting, with their email passed along as ?email=.
+   3. Check that the analytics event names suit the GA4 / GTM setup (dataLayer pushes).
+===================================================================== -->
+<style>
+  .bo-hw-overlay,.bo-hw-overlay *,.bo-hw-tab,.bo-hw-tab *{box-sizing:border-box}
+  .bo-hw-overlay h2,.bo-hw-overlay p{margin:0;padding:0}
+  html.bo-hw-lock,html.bo-hw-lock body{overflow:hidden}
+
+  .bo-hw-overlay{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;
+    font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:rgba(4,6,18,.75);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);
+    opacity:0;visibility:hidden;transition:opacity .35s,visibility .35s}
+  .bo-hw-overlay.open{opacity:1;visibility:visible}
+
+  .bo-hw-modal{position:relative;width:100%;max-width:540px;max-height:calc(100vh - 40px);max-height:calc(100dvh - 40px);overflow-y:auto;overflow-x:hidden;
+    border-radius:24px;color:#fff;background:#0a0d24;border:2px solid #f2600c;
+    box-shadow:0 30px 80px rgba(0,0,0,.6),0 0 50px rgba(242,96,12,.18);
+    transform:translateY(30px) scale(.96);transition:transform .45s cubic-bezier(.2,.9,.3,1.2)}
+  .bo-hw-overlay.open .bo-hw-modal{transform:none}
+
+  /* Faint line-numbered code across the whole background, drifting slowly upwards */
+  .bo-hw-code{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:0}
+  .bo-hw-code::before{content:"";position:absolute;left:50%;top:-80px;width:520px;height:340px;transform:translateX(-50%);
+    background:radial-gradient(closest-side,rgba(98,72,200,.35),transparent);z-index:1}
+  .bo-hw-code pre{margin:0;padding:16px 18px;font:13px/2.05 ui-monospace,"JetBrains Mono",SFMono-Regular,Menlo,Consolas,monospace;
+    color:#8b91c4;opacity:.14;white-space:pre;animation:bo-hw-scroll 70s linear infinite}
+  .bo-hw-code pre i{font-style:normal;display:inline-block;width:2.4em;text-align:right;margin-right:1.6em;opacity:.7}
+  @keyframes bo-hw-scroll{to{transform:translateY(-50%)}}
+
+  .bo-hw-overlay button:focus-visible,.bo-hw-overlay a:focus-visible,.bo-hw-overlay input:focus-visible,.bo-hw-tab button:focus-visible{outline:2px solid #ffb347;outline-offset:3px}
+
+  .bo-hw-close{position:absolute;top:12px;right:12px;z-index:5;width:44px;height:44px;border-radius:50%;cursor:pointer;padding:0;
+    background:transparent;border:2px solid #f2600c;color:#f2600c;transition:.2s;display:flex;align-items:center;justify-content:center}
+  .bo-hw-close svg{width:20px;height:20px}
+  .bo-hw-close:hover{background:rgba(242,96,12,.15);transform:rotate(90deg)}
+
+  /* Ghosts */
+  .bo-hw-ghosts{position:relative;z-index:1;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;padding:46px 26px 0;align-items:end}
+  .bo-hw-ghost{position:relative;animation:bo-hw-float 4s ease-in-out infinite}
+  .bo-hw-ghost:nth-child(2){animation-delay:-1s;margin-bottom:10px}
+  .bo-hw-ghost:nth-child(3){animation-delay:-2.1s}
+  .bo-hw-ghost:nth-child(4){animation-delay:-3s;margin-bottom:6px}
+  .bo-hw-ghost:nth-child(odd) svg{width:90%;margin:0 auto}
+  .bo-hw-ghost-in{position:relative;transform-origin:50% 15%;animation:bo-hw-sway 4s ease-in-out infinite;animation-delay:inherit}
+  .bo-hw-ghost svg{display:block;width:100%;height:auto;overflow:visible;filter:drop-shadow(0 0 10px rgba(150,130,255,.7))}
+  .bo-hw-ghost span{position:absolute;left:4%;right:4%;top:60%;transform:translateY(-50%);text-align:center;
+    font-size:13.5px;line-height:1.3;font-weight:700;letter-spacing:-.2px;color:#14172e}
+  @keyframes bo-hw-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-9px)}}
+  @keyframes bo-hw-sway{0%,100%{transform:rotate(-2.5deg)}50%{transform:rotate(2.5deg)}}
+
+  /* Body */
+  .bo-hw-body{position:relative;z-index:1;padding:34px 40px 30px;text-align:center}
+  .bo-hw-eyebrow{display:inline-block;font-size:16px;font-weight:700;color:#fff;background:#f2600c;padding:7px 22px;border-radius:999px;margin-bottom:22px}
+  .bo-hw-body h2{font-size:44px;line-height:1.08;letter-spacing:-1.4px;font-weight:800;margin-bottom:18px;color:#fff}
+  .bo-hw-body h2 em{font-style:normal;color:#f2600c;display:block}
+  .bo-hw-body p{color:#a7a3f2;font-size:16.5px;line-height:1.5;font-weight:600;margin-bottom:26px}
+
+  /* Pill field with the label sitting in the top border, matching the site's HubSpot forms */
+  .bo-hw-form{display:flex;align-items:flex-end;gap:12px;margin-bottom:4px;text-align:left}
+  .bo-hw-field{flex:1;min-width:0;margin:0;padding:0 18px 0 20px;border:1.5px solid #f2600c;border-radius:999px;background:#090c22;
+    transition:box-shadow .2s,border-color .2s}
+  .bo-hw-field legend{padding:0 6px;font-size:14px;line-height:1;font-weight:500;color:#fff}
+  .bo-hw-field legend label{cursor:pointer;margin-bottom: unset;color: var(--_themes---colours--white)}
+  .bo-hw-field:focus-within{box-shadow:0 0 0 3px rgba(242,96,12,.3)}
+  .bo-hw-field:has(input[aria-invalid=true]){border-color:#ff6b6b}
+  .bo-hw-field input{display:block;width:100%;height:48px;padding:0 6px;border:none;background:transparent;color:#fff;font-size:15px;font-family:inherit;outline:none}
+  .bo-hw-field input:focus-visible{outline:none}
+  .bo-hw-field input::placeholder{color:#8b91c4;opacity:1}
+  .bo-hw-field input:-webkit-autofill{-webkit-text-fill-color:#fff;caret-color:#fff;box-shadow:0 0 0 40px #090c22 inset}
+  .bo-hw-hp{position:absolute!important;left:-9999px!important;width:1px;height:1px;opacity:0}
+  .bo-hw-cta{flex:none;height:58px;padding:0 28px;border:none;border-radius:999px;cursor:pointer;font-weight:700;font-size:16px;font-family:inherit;white-space:nowrap;
+    background:#f2600c;color:#fff;transition:.2s}
+  .bo-hw-cta:hover{background:#ff7a1a;transform:translateY(-1px)}
+  .bo-hw-cta[disabled]{opacity:.7;cursor:wait;transform:none}
+  .bo-hw-err{min-height:20px;font-size:13px;color:#ff8f8f;text-align:left;margin:4px 0 8px}
+  .bo-hw-skip{background:none;border:none;color:#a7a3f2;font-size:15px;font-weight:600;font-family:inherit;cursor:pointer;text-decoration:underline;padding:6px}
+  .bo-hw-skip:hover{color:#ffb347}
+  .bo-hw-body p.bo-hw-legal{margin:14px auto 0;max-width:380px;font-size:12px;line-height:1.5;font-weight:400;color:#8b91c4}
+  .bo-hw-legal a{color:#a7a3f2;text-decoration:underline}
+  .bo-hw-legal a:hover{color:#ffb347}
+
+  .bo-hw-success{display:none;padding:6px 0}
+  .bo-hw-success .bo-hw-cta{height:auto;padding:16px 30px}
+  .bo-hw-modal.done .bo-hw-success{display:block}
+  .bo-hw-modal.done .bo-hw-main{display:none}
+
+  /* Minimised tab */
+  .bo-hw-tab{position:fixed;right:20px;bottom:20px;z-index:9998;display:flex;align-items:center;border-radius:999px;border:2px solid #f2600c;
+    background:#0a0d24;box-shadow:0 8px 30px rgba(0,0,0,.5);font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;transform:translateY(140px);transition:transform .4s}
+  .bo-hw-tab.show{transform:none}
+  .bo-hw-tab button{background:none;border:none;cursor:pointer;color:#fff;font-family:inherit}
+  .bo-hw-tab-open{display:flex;align-items:center;gap:8px;padding:9px 6px 9px 14px;font-weight:700;font-size:14px}
+  .bo-hw-tab-open svg{width:20px;height:26px;fill:#f4f2ff;filter:drop-shadow(0 0 4px rgba(150,130,255,.8));animation:bo-hw-float 3s ease-in-out infinite}
+  .bo-hw-tab-x{padding:11px 14px 11px 8px;font-size:16px;color:#a7a3f2!important}
+  .bo-hw-tab:hover{background:#151a3a}
+
+  @media (max-width:520px){
+    .bo-hw-ghosts{padding:56px 12px 0;gap:4px}
+    .bo-hw-ghost span{position:static;display:block;transform:none;margin-top:6px;font-size:10.5px;line-height:1.2;color:#eef0ff}
+    .bo-hw-body{padding:20px 20px 24px}
+    .bo-hw-eyebrow{font-size:14px}
+    .bo-hw-body h2{font-size:34px}
+    .bo-hw-body p{font-size:15px}
+    .bo-hw-form{flex-direction:column;align-items:stretch;gap:12px}
+    .bo-hw-tab{right:12px;bottom:12px}
+  }
+  @media (prefers-reduced-motion:reduce){
+    .bo-hw-overlay *,.bo-hw-tab *{animation:none!important}
+    .bo-hw-overlay,.bo-hw-modal,.bo-hw-tab{transition:none}
+  }
+</style>
+
+<div class="bo-hw-overlay" id="boHwOverlay" role="dialog" aria-modal="true" aria-labelledby="boHwTitle" aria-describedby="boHwDesc">
+  <div class="bo-hw-modal" id="boHwModal">
+    <div class="bo-hw-code" aria-hidden="true"><pre id="boHwCode"></pre></div>
+    <button type="button" class="bo-hw-close" aria-label="Close" data-bo-hw-close>
+      <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 3l14 14M17 3L3 17" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
+    </button>
+
+    <div class="bo-hw-ghosts" aria-hidden="true">
+      <div class="bo-hw-ghost"><div class="bo-hw-ghost-in"><svg viewBox="0 0 200 260"><defs><linearGradient id="boHwG0" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#ddd8f2"/></linearGradient></defs><path d="M100 12C58 12 38 52 33 110C29 160 20 205 6 236C22 250 40 240 58 246C76 252 88 240 100 246C112 252 124 240 142 246C160 252 178 250 194 236C180 205 171 160 167 110C162 52 142 12 100 12Z" fill="url(#boHwG0)"/><ellipse cx="82" cy="84" rx="9" ry="13" fill="#0a0d24"/><ellipse cx="118" cy="84" rx="9" ry="13" fill="#0a0d24"/></svg><span>Exposed<br>secrets</span></div></div>
+      <div class="bo-hw-ghost"><div class="bo-hw-ghost-in"><svg viewBox="0 0 200 260"><defs><linearGradient id="boHwG1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#ddd8f2"/></linearGradient></defs><path d="M100 12C58 12 38 52 33 110C29 160 20 205 6 236C22 250 40 240 58 246C76 252 88 240 100 246C112 252 124 240 142 246C160 252 178 250 194 236C180 205 171 160 167 110C162 52 142 12 100 12Z" fill="url(#boHwG1)"/><ellipse cx="82" cy="84" rx="9" ry="13" fill="#0a0d24"/><ellipse cx="118" cy="84" rx="9" ry="13" fill="#0a0d24"/></svg><span>Tech<br>debt</span></div></div>
+      <div class="bo-hw-ghost"><div class="bo-hw-ghost-in"><svg viewBox="0 0 200 260"><defs><linearGradient id="boHwG2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#ddd8f2"/></linearGradient></defs><path d="M100 12C58 12 38 52 33 110C29 160 20 205 6 236C22 250 40 240 58 246C76 252 88 240 100 246C112 252 124 240 142 246C160 252 178 250 194 236C180 205 171 160 167 110C162 52 142 12 100 12Z" fill="url(#boHwG2)"/><ellipse cx="82" cy="84" rx="9" ry="13" fill="#0a0d24"/><ellipse cx="118" cy="84" rx="9" ry="13" fill="#0a0d24"/></svg><span>Flaws in<br>gen-AI code</span></div></div>
+      <div class="bo-hw-ghost"><div class="bo-hw-ghost-in"><svg viewBox="0 0 200 260"><defs><linearGradient id="boHwG3" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#ddd8f2"/></linearGradient></defs><path d="M100 12C58 12 38 52 33 110C29 160 20 205 6 236C22 250 40 240 58 246C76 252 88 240 100 246C112 252 124 240 142 246C160 252 178 250 194 236C180 205 171 160 167 110C162 52 142 12 100 12Z" fill="url(#boHwG3)"/><ellipse cx="82" cy="84" rx="9" ry="13" fill="#0a0d24"/><ellipse cx="118" cy="84" rx="9" ry="13" fill="#0a0d24"/></svg><span>Vulnerable<br>dependencies</span></div></div>
+    </div>
+
+    <div class="bo-hw-body">
+      <div class="bo-hw-main">
+        <span class="bo-hw-eyebrow">Halloween offer · ends 31 Oct</span>
+        <h2 id="boHwTitle">Is something <em>haunting</em> your codebase?</h2>
+        <p id="boHwDesc">Get a free 15-minute security review with our team.</p>
+        <form class="bo-hw-form" id="boHwForm" novalidate>
+          <fieldset class="bo-hw-field">
+            <legend><label for="boHwEmail">Work Email*</label></legend>
+            <input type="email" name="email" id="boHwEmail" required autocomplete="email" placeholder="e.g. jane@company.com"
+                   aria-describedby="boHwErr">
+          </fieldset>
+          <input type="text" name="company_website" class="bo-hw-hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+          <button class="bo-hw-cta" type="submit" id="boHwSubmit">Claim my free review</button>
+        </form>
+        <div class="bo-hw-err" id="boHwErr" aria-live="polite"></div>
+        <button type="button" class="bo-hw-skip" data-bo-hw-close>No thanks, I'll take my chances</button>
+        <p class="bo-hw-legal">By submitting, you agree that BlueOptima may contact you about this offer.
+          See our <a href="https://www.blueoptima.com/documents/privacy-policy" target="_blank" rel="noopener">Privacy Policy</a>.</p>
+      </div>
+      <div class="bo-hw-success" aria-live="polite">
+        <h2 tabindex="-1" id="boHwDoneTitle">No tricks, just <em>treats.</em></h2>
+        <p>Thanks! Our team will be in touch shortly to book your free 15-minute security review.</p>
+        <button type="button" class="bo-hw-cta" data-bo-hw-close>Back to the site</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="bo-hw-tab" id="boHwTab">
+  <button type="button" class="bo-hw-tab-open" id="boHwTabOpen"><svg viewBox="0 0 200 260" aria-hidden="true"><path d="M100 12C58 12 38 52 33 110C29 160 20 205 6 236C22 250 40 240 58 246C76 252 88 240 100 246C112 252 124 240 142 246C160 252 178 250 194 236C180 205 171 160 167 110C162 52 142 12 100 12Z"/></svg>Free 15-min security review</button>
+  <button type="button" class="bo-hw-tab-x" id="boHwTabX" aria-label="Hide offer">×</button>
+</div>
+
+<script>
+(function(){
+  /* ---------------- CONFIG ---------------- */
+  var CONFIG = {
+    endDate:      '2026-10-31T23:59:59Z', // 31 Oct is GMT in the UK, so Z = UK time
+    delayMs:      4000,     // auto-open after 4s of the tab being visible...
+    exitIntent:   true,     // ...or earlier if the mouse heads for the tab bar (desktop)
+    autoOpenOnMobile: false,// mobile: show the small tab only (avoids Google's intrusive-popup penalty)
+    snoozeDays:   3,        // after closing, don't auto-open again for this many days
+    hubspot: {
+      portalId:   '24890502',
+      formId:     '46135be3-71df-4c64-8b06-bd183bdb3949',       // TODO (agency): HubSpot form GUID. Empty = preview mode (no data sent)
+      region:     'eu1'
+    },
+    bookingUrl:   '',       // TODO (optional): HubSpot Meetings link to send people to after submitting
+    blockFreeEmail: true    // ask for a work email (rejects gmail, hotmail etc.)
+  };
+  /* ---------------------------------------- */
+
+  var CODE = [
+    'import { scan, report } from "@blueoptima/code-insights";',
+    'import legacy from "./legacy/utils_old_FINAL_v2.js";',
+    '',
+    '// TODO: remove before 2019 release',
+    'const API_KEY = "sk-live-4f9a...redacted";',
+    'const config = loadConfig(process.env.HAUNTED_ENV);',
+    '',
+    'export async function review(repo) {',
+    '  const spirits = await scan(repo, {',
+    '    secrets: true,',
+    '    zombieCode: true,',
+    '    aiGenerated: true,',
+    '    dependencies: "all",',
+    '  });',
+    '  for (const ghost of spirits) {',
+    '    if (ghost.age > 365 && !ghost.calledBy.length) {',
+    '      console.warn(`zombie function: ${ghost.name}`);',
+    '    }',
+    '    if (ghost.type === "secret") rotateKey(ghost); // who committed this?!',
+    '  }',
+    '  return report(spirits);',
+    '}',
+    '',
+    'function deadCode() {',
+    '  // nobody knows what this does',
+    '  // nobody dares to delete it',
+    '  return legacy.doTheThing(undefined, null, 42);',
+    '}',
+    '',
+    '/* generated by ai - please review */',
+    'const isWorking = (x) => x === x ? true : !false;',
+    '',
+    'class Dependency {',
+    '  constructor(name, version) {',
+    '    this.name = name;       // left-pad@0.0.1',
+    '    this.version = version; // CVE-2026-1031',
+    '  }',
+    '}',
+    ''
+  ].join('\n');
+
+  var KEY = 'boHw2026_';
+  var END = new Date(CONFIG.endDate);
+  var $ = function(id){ return document.getElementById(id); };
+  var overlay = $('boHwOverlay'), modal = $('boHwModal'), tab = $('boHwTab'), form = $('boHwForm'),
+      email = $('boHwEmail'), err = $('boHwErr'), submitBtn = $('boHwSubmit');
+  if (!overlay) return;
+
+  // Code texture: two copies so the scroll loops seamlessly
+  var lines = (CODE + '\n' + CODE).split('\n'), n = CODE.split('\n').length;
+  $('boHwCode').innerHTML = lines.map(function(l, i){
+    return '<i>' + (i % n + 1) + '</i>' + l.replace(/&/g,'&amp;').replace(/</g,'&lt;');
+  }).join('\n');
+
+  function get(k){ try { return localStorage.getItem(KEY + k); } catch(e){ return null; } }
+  function set(k, v){ try { localStorage.setItem(KEY + k, v); } catch(e){} }
+  function track(name, data){
+    window.dataLayer = window.dataLayer || [];
+    var o = { event: 'bo_halloween_' + name };
+    for (var k in data) o[k] = data[k];
+    window.dataLayer.push(o);
+  }
+  function destroy(){ overlay.remove(); tab.remove(); document.documentElement.classList.remove('bo-hw-lock'); }
+
+  // Offer over, or already signed up: show nothing at all
+  if (new Date() >= END || get('submitted')) { destroy(); return; }
+
+  var isOpen = false, autoDone = false, lastFocus = null, submitted = false;
+
+  function focusables(){
+    return Array.prototype.filter.call(
+      modal.querySelectorAll('button, a[href], input:not([type=hidden]):not([tabindex="-1"])'),
+      function(el){ return el.offsetParent !== null; });
+  }
+  function showTab(){ if (!submitted && !(Number(get('tabHiddenUntil')) > Date.now())) tab.classList.add('show'); }
+
+  function open(trigger){
+    if (isOpen) return;
+    isOpen = true; autoDone = true;
+    lastFocus = document.activeElement;
+    overlay.classList.add('open');
+    document.documentElement.classList.add('bo-hw-lock');
+    tab.classList.remove('show');
+    setTimeout(function(){ (submitted ? $('boHwDoneTitle') : email).focus({preventScroll:true}); }, 60);
+    track('open', { trigger: trigger || 'manual' });
+  }
+  function close(reason){
+    if (!isOpen) return;
+    isOpen = false;
+    overlay.classList.remove('open');
+    document.documentElement.classList.remove('bo-hw-lock');
+    if (!submitted) set('snoozeUntil', Date.now() + CONFIG.snoozeDays * 864e5);
+    showTab();
+    if (lastFocus && lastFocus.focus) lastFocus.focus({preventScroll:true});
+    track('close', { reason: reason || 'close' });
+    if (submitted) setTimeout(destroy, 500);
+  }
+
+  // Close buttons, backdrop click, Esc, focus trap
+  Array.prototype.forEach.call(document.querySelectorAll('[data-bo-hw-close]'), function(b){
+    b.addEventListener('click', function(){ close(b.classList.contains('bo-hw-skip') ? 'no_thanks' : 'close'); });
+  });
+  overlay.addEventListener('click', function(e){ if (e.target === overlay) close('backdrop'); });
+  document.addEventListener('keydown', function(e){
+    if (!isOpen) return;
+    if (e.key === 'Escape') { close('escape'); return; }
+    if (e.key === 'Tab') {
+      var f = focusables(); if (!f.length) return;
+      var first = f[0], last = f[f.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    }
+  });
+
+  // Tab
+  $('boHwTabOpen').addEventListener('click', function(){ open('tab'); });
+  $('boHwTabX').addEventListener('click', function(){
+    tab.classList.remove('show'); set('tabHiddenUntil', Date.now() + CONFIG.snoozeDays * 864e5); track('tab_hide', {});
+  });
+
+  // Form
+  var LABEL = submitBtn.textContent;
+  var FREE = ['gmail.com','googlemail.com','yahoo.com','yahoo.co.uk','hotmail.com','hotmail.co.uk','outlook.com',
+              'live.com','live.co.uk','msn.com','icloud.com','me.com','aol.com','proton.me','protonmail.com','gmx.com','mail.com'];
+  function fail(msg){ err.textContent = msg; email.setAttribute('aria-invalid','true'); email.focus(); }
+  email.addEventListener('input', function(){ err.textContent = ''; email.removeAttribute('aria-invalid'); });
+
+  form.addEventListener('submit', function(e){
+    e.preventDefault();
+    var v = email.value.trim().toLowerCase();
+    if (form.company_website.value) { success(v); return; } // bot filled the honeypot
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v)) return fail('Please enter a valid email address.');
+    if (CONFIG.blockFreeEmail && FREE.indexOf(v.split('@')[1]) > -1) return fail('Please use your work email so we can match you to your company.');
+
+    submitBtn.disabled = true; submitBtn.textContent = 'Claiming…';
+    var hs = CONFIG.hubspot, req = Promise.resolve(); // preview mode
+    if (hs.formId) {
+      var hutk = (document.cookie.match(/(?:^|;\s*)hubspotutk=([^;]+)/) || [])[1];
+      var context = { pageUri: location.href, pageName: document.title };
+      if (hutk) context.hutk = hutk; // ties the submission to the visitor's HubSpot tracking history
+      req = fetch('https://api-' + hs.region + '.hsforms.com/submissions/v3/integration/submit/' + hs.portalId + '/' + hs.formId, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fields: [{ objectTypeId: '0-1', name: 'email', value: v }], context: context })
+      }).then(function(r){ if (!r.ok) throw new Error(r.status); });
+    }
+    req.then(function(){ success(v); }).catch(function(){
+      submitBtn.disabled = false; submitBtn.textContent = LABEL;
+      fail('Something went wrong. Please try again in a moment.');
+      track('submit_error', {});
+    });
+  });
+  function success(v){
+    submitted = true; set('submitted', '1');
+    if (CONFIG.bookingUrl) {
+      // Wait for GTM to send the submit event before leaving the page (1.5s fallback if GTM isn't there)
+      var went = false, go = function(){
+        if (went) return; went = true;
+        window.location.href = CONFIG.bookingUrl + (CONFIG.bookingUrl.indexOf('?') > -1 ? '&' : '?') + 'email=' + encodeURIComponent(v);
+      };
+      track('submit', { campaign: 'halloween-2026-security-review', eventCallback: go, eventTimeout: 1500 });
+      setTimeout(go, 1500);
+      return;
+    }
+    track('submit', { campaign: 'halloween-2026-security-review' });
+    modal.classList.add('done');
+    $('boHwDoneTitle').focus();
+  }
+
+  // Auto-remove at the end date even if the page stays open
+  setInterval(function(){ if (new Date() >= END) destroy(); }, 60000);
+
+  // Triggers
+  var snoozed = Number(get('snoozeUntil')) > Date.now();
+  var mobile = window.matchMedia('(max-width: 600px)').matches;
+  if (snoozed || (mobile && !CONFIG.autoOpenOnMobile)) {
+    setTimeout(showTab, snoozed ? 1000 : CONFIG.delayMs);
+  } else {
+    // Only count time the tab is visible, so it never opens unseen in a background tab
+    var activeMs = 0, tick = setInterval(function(){
+      if (autoDone) return clearInterval(tick);
+      if (!document.hidden && (activeMs += 250) >= CONFIG.delayMs) { clearInterval(tick); open('timer'); }
+    }, 250);
+    if (CONFIG.exitIntent) document.addEventListener('mouseout', function(e){
+      if (!autoDone && !e.relatedTarget && e.clientY <= 0) open('exit_intent');
+    });
+  }
+
+  window.boHwOpen = function(){ open('manual'); }; // e.g. link a banner: onclick="boHwOpen()"
+})();
+</script>
+<!-- ===================== END Halloween popup ===================== -->
+</div></div></div><div class="global-div relative-div"><div class="footer_heading"><a href="/2025-home" class="footer__brand-link w-nav-brand"><div class="w-embed"><svg width="6.4em" height="1.28em" viewBox="0 0 303 57" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path fill-rule="evenodd" clip-rule="evenodd" d="M35.1464 0C54.5558 0 70.2929 15.7206 70.2929 35.115C70.2929 40.2096 69.2059 45.0501 67.2518 49.4193H3.04103C1.08691 45.0501 0 40.2096 0 35.115C0 15.7229 15.7347 0 35.1464 0Z" fill="currentColor"/>
+<path d="M96.7116 39.0567C96.7116 37.0049 96.397 35.5401 95.7773 34.6621C95.1506 33.7795 94.1862 33.3428 92.8889 33.3428C92.313 33.3428 91.7442 33.4375 91.173 33.6177C90.6041 33.798 90.0444 34.0752 89.494 34.4449V44.7705C89.9195 44.9392 90.352 45.0593 90.7914 45.1148C91.2238 45.1772 91.6563 45.2095 92.0818 45.2095C93.6428 45.2095 94.8014 44.6966 95.5645 43.6707C96.3277 42.6449 96.7116 41.1107 96.7116 39.0567ZM103.289 38.925C103.289 42.1989 102.456 44.8445 100.789 46.8661C99.1236 48.8878 97.0631 49.9021 94.6002 49.9021C93.5734 49.9021 92.6784 49.782 91.9199 49.5509C91.1637 49.313 90.3543 48.9502 89.4963 48.4627L89.2211 49.4886H83.0697V20.9493H89.4963V31.0623C90.4422 30.256 91.4019 29.5975 92.3778 29.0984C93.3606 28.597 94.4961 28.3475 95.7796 28.3475C98.18 28.3475 100.032 29.2786 101.337 31.1501C102.641 33.0216 103.291 35.6117 103.291 38.925" fill="currentColor"/>
+<path d="M111.91 20.9516H105.483V49.4909H111.91V20.9516Z" fill="currentColor"/>
+<path d="M133.426 49.4909H126.999V47.2127C125.885 48.1462 124.862 48.8462 123.93 49.3291C123.003 49.8097 121.895 50.0546 120.61 50.0546C118.561 50.0546 116.97 49.41 115.823 48.1207C114.676 46.8315 114.107 44.8907 114.107 42.3075V28.9136H120.533V39.1144C120.533 40.1773 120.559 41.0483 120.614 41.7184C120.672 42.3884 120.802 42.9591 121.014 43.4212C121.209 43.8463 121.516 44.1721 121.93 44.3916C122.337 44.6111 122.913 44.7243 123.653 44.7243C124.111 44.7243 124.65 44.6111 125.269 44.3916C125.896 44.1721 126.472 43.8717 126.999 43.4974V28.9159H133.426V49.4955V49.4909Z" fill="currentColor"/>
+<path d="M147.699 50.0546C143.802 50.0546 140.815 49.1281 138.736 47.2705C136.661 45.4128 135.623 42.765 135.623 39.3293C135.623 35.8936 136.594 33.2897 138.53 31.2795C140.465 29.2763 143.178 28.2759 146.654 28.2759C149.817 28.2759 152.197 29.1261 153.788 30.829C155.386 32.5249 156.182 34.9602 156.182 38.1325V40.443H142.05C142.112 41.3995 142.313 42.1966 142.658 42.8413C143.002 43.4859 143.453 43.9919 144.022 44.3754C144.575 44.7497 145.218 45.027 145.953 45.1887C146.691 45.3574 147.493 45.4383 148.365 45.4383C149.117 45.4383 149.85 45.3574 150.576 45.1887C151.302 45.0201 151.966 44.8006 152.567 44.5256C153.094 44.2876 153.582 44.0381 154.026 43.7632C154.477 43.4882 154.84 43.2502 155.123 43.0377H155.807V48.3518C155.28 48.5597 154.799 48.7515 154.366 48.9271C153.927 49.1073 153.333 49.2899 152.574 49.4724C151.873 49.6526 151.152 49.7982 150.414 49.9045C149.669 50.0107 148.768 50.0616 147.701 50.0616M149.868 36.5798C149.831 35.2097 149.512 34.163 148.916 33.4514C148.314 32.7305 147.399 32.3747 146.166 32.3747C144.933 32.3747 143.916 32.749 143.208 33.5068C142.501 34.2578 142.105 35.2836 142.031 36.5798H149.868Z" fill="currentColor"/>
+<path d="M202.144 38.888C202.144 42.1735 201.304 44.8283 199.63 46.8431C197.951 48.8578 195.884 49.8652 193.428 49.8652C192.401 49.8652 191.504 49.7474 190.741 49.514C189.982 49.2829 189.168 48.9248 188.31 48.4373V57H181.883V28.8743H188.31V31.0208C189.256 30.219 190.22 29.5628 191.205 29.0615C192.184 28.5601 193.324 28.3105 194.607 28.3105C197.008 28.3105 198.86 29.2555 200.169 31.1525C201.485 33.0494 202.144 35.621 202.144 38.888ZM195.567 39.0266C195.567 37.0234 195.252 35.5655 194.633 34.6644C194.013 33.7564 193.042 33.3058 191.726 33.3058C191.15 33.3058 190.572 33.4006 190.003 33.5808C189.427 33.7633 188.863 34.0383 188.312 34.408V44.7659C188.657 44.9161 189.034 45.0224 189.446 45.0801C189.859 45.1425 190.347 45.1749 190.916 45.1749C192.489 45.1749 193.661 44.6619 194.418 43.6407C195.181 42.6218 195.565 41.0876 195.565 39.0289" fill="currentColor"/>
+<path d="M213.839 49.8675C211.221 49.8675 209.311 49.3291 208.113 48.2524C206.917 47.1757 206.32 45.4174 206.32 42.9706V33.3451H203.876V28.8766H206.32V22.9802H212.747V28.8766H218.947V33.3451H212.747V40.6555C212.747 41.381 212.754 42.0141 212.766 42.5524C212.779 43.0908 212.879 43.5737 213.059 44.0057C213.228 44.4309 213.536 44.7751 213.968 45.027C214.408 45.2765 215.039 45.4013 215.871 45.4013C216.216 45.4013 216.667 45.3273 217.224 45.1748C217.782 45.0247 218.177 44.8883 218.394 44.7613H218.945V49.2806C218.249 49.4677 217.504 49.611 216.72 49.7127C215.938 49.8189 214.972 49.8698 213.832 49.8698" fill="currentColor"/>
+<path d="M224.837 18.38C227.085 18.38 228.905 20.1984 228.905 22.4442C228.905 24.69 227.085 26.5083 224.837 26.5083C222.589 26.5083 220.769 24.69 220.769 22.4442C220.769 20.1984 222.589 18.38 224.837 18.38Z" fill="currentColor"/>
+<path d="M228.033 28.8743H221.606V49.4539H228.033V28.8743Z" fill="currentColor"/>
+<path d="M256.295 49.4539V39.1768C256.295 38.1625 256.276 37.3053 256.237 36.6099C256.198 35.9144 256.087 35.346 255.893 34.907C255.703 34.468 255.405 34.1423 255 33.9436C254.595 33.7425 254.038 33.6432 253.309 33.6432C252.796 33.6432 252.294 33.7495 251.792 33.962C251.297 34.1746 250.752 34.4819 250.167 34.8701V49.4516H243.493V39.1745C243.493 38.1718 243.474 37.3215 243.428 36.6214C243.382 35.9144 243.266 35.346 243.069 34.907C242.882 34.468 242.581 34.1423 242.179 33.9436C241.781 33.7425 241.222 33.6432 240.507 33.6432C239.954 33.6432 239.42 33.768 238.9 34.0129C238.373 34.2578 237.866 34.5397 237.364 34.8701V49.4516H230.69V28.872H237.364V31.1502C238.456 30.256 239.485 29.5605 240.447 29.0592C241.416 28.5578 242.503 28.3082 243.705 28.3082C245.014 28.3082 246.164 28.6086 247.153 29.2024C248.148 29.8031 248.904 30.6996 249.424 31.8803C250.705 30.7297 251.915 29.847 253.053 29.2324C254.186 28.6132 255.342 28.3059 256.508 28.3059C257.504 28.3059 258.388 28.4561 259.176 28.7634C259.963 29.0707 260.633 29.5259 261.179 30.1405C261.778 30.7967 262.22 31.5799 262.518 32.4926C262.819 33.4006 262.967 34.5905 262.967 36.053V49.447H256.293L256.295 49.4539Z" fill="currentColor"/>
+<path d="M278.482 44.0774V39.766C277.404 39.8792 276.528 39.9716 275.864 40.0525C275.193 40.1264 274.541 40.2835 273.896 40.5215C273.339 40.7156 272.906 41.0159 272.592 41.411C272.284 41.8108 272.129 42.3445 272.129 43.0076C272.129 43.978 272.386 44.6411 272.899 45.0039C273.42 45.3666 274.176 45.5468 275.187 45.5468C275.744 45.5468 276.315 45.4151 276.898 45.1587C277.481 44.9022 278.008 44.5395 278.482 44.0774ZM278.482 47.2705C278.043 47.6401 277.649 47.9705 277.305 48.2663C276.953 48.5551 276.491 48.8485 275.901 49.142C275.33 49.4239 274.773 49.6433 274.229 49.7935C273.69 49.9437 272.932 50.02 271.956 50.02C270.138 50.02 268.63 49.4054 267.432 48.1785C266.23 46.9516 265.629 45.4128 265.629 43.5483C265.629 42.0141 265.936 40.7757 266.544 39.8376C267.153 38.8926 268.029 38.1417 269.176 37.5895C270.335 37.0257 271.72 36.6329 273.33 36.4134C274.939 36.1939 276.669 36.0253 278.524 35.9005V35.7873C278.524 34.6551 278.103 33.865 277.27 33.4352C276.438 33.0031 275.184 32.7836 273.519 32.7836C272.761 32.7836 271.877 32.9223 270.869 33.1972C269.861 33.4722 268.871 33.8234 267.907 34.2485H267.361V29.2671C267.999 29.0845 269.021 28.8673 270.443 28.6155C271.859 28.3637 273.293 28.2389 274.733 28.2389C278.278 28.2389 280.862 28.8281 282.483 30.011C284.106 31.194 284.913 32.9962 284.913 35.4245V49.4562H278.487V47.2728L278.482 47.2705Z" fill="currentColor"/>
+<path d="M179.689 39.1699C179.689 42.5571 178.762 45.2211 176.907 47.1688C175.048 49.1143 172.427 50.0916 169.033 50.0916C165.638 50.0916 163.043 49.1143 161.177 47.1688C159.31 45.2234 158.376 42.5571 158.376 39.1699C158.376 35.7827 159.31 33.0748 161.177 31.1409C163.043 29.207 165.663 28.2366 169.033 28.2366C172.402 28.2366 175.034 29.2139 176.895 31.1594C178.757 33.1048 179.689 35.7781 179.689 39.1699ZM173.112 39.2069C173.112 37.9915 173.012 36.9795 172.804 36.1709C172.603 35.3576 172.321 34.7129 171.965 34.2254C171.59 33.7125 171.155 33.3567 170.674 33.1557C170.198 32.9546 169.648 32.8553 169.033 32.8553C168.457 32.8553 167.929 32.9431 167.467 33.1187C166.997 33.2943 166.565 33.6316 166.17 34.133C165.807 34.609 165.506 35.2605 165.286 36.0854C165.066 36.9171 164.953 37.9569 164.953 39.2092C164.953 40.4615 165.06 41.4804 165.268 42.2498C165.473 43.0261 165.749 43.6384 166.082 44.1028C166.426 44.5788 166.852 44.923 167.372 45.1425C167.886 45.362 168.461 45.4752 169.09 45.4752C169.604 45.4752 170.131 45.362 170.668 45.1425C171.199 44.923 171.625 44.5972 171.944 44.1606C172.326 43.6338 172.615 43.0076 172.816 42.2706C173.01 41.5312 173.11 40.5123 173.11 39.2092" fill="currentColor"/>
+<path d="M287.138 22.3194H289.346V28.1973H290.981V22.3194H293.19V20.9516H287.138V22.3194Z" fill="currentColor"/>
+<path d="M301.823 20.9516H300.639H300.315L298.363 25.9122L296.423 20.9516H296.097H294.915H294.45V28.1973H296.097V23.812L297.91 28.1973H298.816L300.639 23.8004V28.1973H302.276V20.9516H301.823Z" fill="currentColor"/>
+</svg></div></a></div><div class="footer_flex large"><div class="footer__link-grid-full"><div><ul role="list" class="footer__links vertical"><li class="menu__li"><a href="#" class="footer_link">Platform</a></li><li class="menu__li"><a href="/platform/performance-insights" class="footer_link cc-small w-inline-block"><div class="w-embed"><svg width="1.4em" height="1.4em" viewBox="0 0 25 25" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g clip-path="url(#clip0_6519_1320)">
+<path d="M9.82704 25C15.2544 25 19.6541 20.6003 19.6541 15.173C19.6541 9.74567 15.2544 5.34595 9.82704 5.34595C4.39972 5.34595 0 9.74567 0 15.173C0 20.6003 4.39972 25 9.82704 25Z" fill="#105AE8"/>
+<path d="M24.999 14.0111C25.0383 14.5976 24.5729 15.0944 23.9849 15.0944H11.2129C10.4912 15.0944 9.90625 14.5095 9.90625 13.7878V1.01581C9.90625 0.427762 10.4031 -0.0360743 10.9896 0.00166154C18.5085 0.503234 24.4974 6.49065 24.999 14.0111Z" fill="#FC6151"/>
+<path d="M9.90625 13.7879V5.34766C15.2695 5.38854 19.6122 9.72973 19.6531 15.0945H11.2129C10.4912 15.0945 9.90625 14.5096 9.90625 13.7879Z" fill="#105AE8"/>
+<path d="M9.90625 13.7879V5.34766C15.2695 5.38854 19.6122 9.72973 19.6531 15.0945H11.2129C10.4912 15.0945 9.90625 14.5096 9.90625 13.7879Z" fill="url(#paint0_linear_6519_1320)" style="mix-blend-mode:multiply"/>
+</g>
+<defs>
+<linearGradient id="paint0_linear_6519_1320" x1="19.6531" y1="10.2219" x2="9.90625" y2="10.2219" gradientUnits="userSpaceOnUse">
+<stop stop-color="#00299C"/>
+<stop offset="1" stop-color="#0073E6"/>
+</linearGradient>
+<clipPath id="clip0_6519_1320">
+<rect width="25" height="25" fill="white"/>
+</clipPath>
+</defs>
+</svg></div><div>Performance Insights</div></a></li><li class="menu__li"><a href="/platform/code-insights" class="footer_link cc-small w-inline-block"><div class="w-embed"><svg width="1.4em" height="1.4em" viewBox="0 0 25 25" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g clip-path="url(#clip0_6519_1333)">
+<path d="M4.36158 21.3171L7.17084 24.1141C8.18537 25.1242 9.83025 25.1242 10.8448 24.1141L20.6357 14.3658C21.6502 13.3556 21.6502 11.7179 20.6357 10.7078L17.8264 7.91071C16.8119 6.90059 15.167 6.90059 14.1525 7.91071L4.36158 17.6591C3.34705 18.6692 3.34705 20.3069 4.36158 21.3171Z" fill="#105AE8"/>
+<path d="M7.16967 0.88664L4.36041 3.6837C3.34588 4.69383 3.34588 6.33156 4.36041 7.34169L14.1513 17.0901C15.1658 18.1002 16.8107 18.1002 17.8252 17.0901L20.6345 14.293C21.649 13.2829 21.649 11.6451 20.6345 10.635L10.8436 0.886641C9.82908 -0.123484 8.1842 -0.123485 7.16967 0.88664Z" fill="#AD7BFF"/>
+<path d="M21.3976 12.5C21.3896 13.15 21.1359 13.7973 20.638 14.2931L17.8279 17.091C16.8133 18.1012 15.1686 18.1012 14.154 17.091L9.54297 12.5L14.154 7.909C15.1686 6.89882 16.8133 6.89882 17.8279 7.909L20.638 10.7069C21.1359 11.2027 21.3896 11.85 21.3976 12.5Z" fill="url(#paint0_linear_6519_1333)" style="mix-blend-mode:multiply"/>
+</g>
+<defs>
+<linearGradient id="paint0_linear_6519_1333" x1="9.54297" y1="12.5" x2="21.3976" y2="12.5" gradientUnits="userSpaceOnUse">
+<stop stop-color="#00299C"/>
+<stop offset="1" stop-color="#0073E6"/>
+</linearGradient>
+<clipPath id="clip0_6519_1333">
+<rect width="25" height="25" fill="white"/>
+</clipPath>
+</defs>
+</svg></div><div>Code Insights</div></a></li><li class="menu__li"><a href="/platform/talent-insights" class="footer_link cc-small w-inline-block"><div class="w-embed"><svg width="1.4em" height="1.4em" viewBox="0 0 25 25" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g clip-path="url(#clip0_6519_1345)">
+<path d="M12.5 25C19.4036 25 25 19.4036 25 12.5C25 5.59644 19.4036 0 12.5 0C5.59644 0 0 5.59644 0 12.5C0 19.4036 5.59644 25 12.5 25Z" fill="#105AE8"/>
+<path d="M12.5 21.164C17.285 21.164 21.164 17.285 21.164 12.5C21.164 7.71495 17.285 3.83594 12.5 3.83594C7.71495 3.83594 3.83594 7.71495 3.83594 12.5C3.83594 17.285 7.71495 21.164 12.5 21.164Z" fill="url(#paint0_linear_6519_1345)" style="mix-blend-mode:multiply"/>
+<path d="M12.4999 17.328C15.1664 17.328 17.328 15.1664 17.328 12.4999C17.328 9.83346 15.1664 7.67188 12.4999 7.67188C9.83346 7.67188 7.67188 9.83346 7.67188 12.4999C7.67188 15.1664 9.83346 17.328 12.4999 17.328Z" fill="#1BDFC8"/>
+</g>
+<defs>
+<linearGradient id="paint0_linear_6519_1345" x1="3.83594" y1="12.5" x2="21.164" y2="12.5" gradientUnits="userSpaceOnUse">
+<stop stop-color="#00299C"/>
+<stop offset="1" stop-color="#0073E6"/>
+</linearGradient>
+<clipPath id="clip0_6519_1345">
+<rect width="25" height="25" fill="white"/>
+</clipPath>
+</defs>
+</svg></div><div>Talent Insights</div></a></li><li class="menu__li"><a href="/platform/active-multisite" class="footer_link cc-small w-inline-block"><div class="w-embed"><svg width="1.4em" height="1.4em" viewBox="0 0 25 21" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g clip-path="url(#clip0_6519_1357)">
+<path d="M11.9647 0H4.60392C2.06125 0 0 2.03465 0 4.54452V11.8103C0 14.3202 2.06125 16.3548 4.60392 16.3548H11.9647C14.5074 16.3548 16.5686 14.3202 16.5686 11.8103V4.54452C16.5686 2.03465 14.5074 0 11.9647 0Z" fill="url(#paint0_linear_6519_1357)"/>
+<path d="M11.9647 0H4.60392C2.06125 0 0 2.03465 0 4.54452V11.8103C0 14.3202 2.06125 16.3548 4.60392 16.3548H11.9647C14.5074 16.3548 16.5686 14.3202 16.5686 11.8103V4.54452C16.5686 2.03465 14.5074 0 11.9647 0Z" fill="url(#paint1_linear_6519_1357)"/>
+<path d="M20.3944 4.64502H13.0336C10.4909 4.64502 8.42969 6.67967 8.42969 9.18954V16.4553C8.42969 18.9652 10.4909 20.9999 13.0336 20.9999H20.3944C22.9371 20.9999 24.9983 18.9652 24.9983 16.4553V9.18954C24.9983 6.67967 22.9371 4.64502 20.3944 4.64502Z" fill="#105AE8"/>
+<path d="M16.5669 4.64502V11.8102C16.5669 14.3205 14.5062 16.3547 11.964 16.3547H8.42969V9.18954C8.42969 6.67921 10.4915 4.64502 13.0336 4.64502H16.5669Z" fill="url(#paint2_linear_6519_1357)" style="mix-blend-mode:multiply"/>
+<path d="M16.5669 4.64502V11.8102C16.5669 14.3205 14.5062 16.3547 11.964 16.3547H8.42969V9.18954C8.42969 6.67921 10.4915 4.64502 13.0336 4.64502H16.5669Z" fill="url(#paint3_linear_6519_1357)" style="mix-blend-mode:multiply"/>
+</g>
+<defs>
+<linearGradient id="paint0_linear_6519_1357" x1="0" y1="8.17742" x2="16.5686" y2="8.17742" gradientUnits="userSpaceOnUse">
+<stop stop-color="#3E9CF8"/>
+<stop offset="0.86" stop-color="#70D6F8"/>
+</linearGradient>
+<linearGradient id="paint1_linear_6519_1357" x1="0" y1="8.17742" x2="16.5686" y2="8.17742" gradientUnits="userSpaceOnUse">
+<stop stop-color="#FEEF81"/>
+<stop offset="0.86" stop-color="#EBA143"/>
+</linearGradient>
+<linearGradient id="paint2_linear_6519_1357" x1="8.42969" y1="10.4999" x2="16.5669" y2="10.4999" gradientUnits="userSpaceOnUse">
+<stop stop-color="#00299C"/>
+<stop offset="1" stop-color="#0073E6"/>
+</linearGradient>
+<linearGradient id="paint3_linear_6519_1357" x1="8.42969" y1="10.4999" x2="16.5669" y2="10.4999" gradientUnits="userSpaceOnUse">
+<stop stop-color="#00299C"/>
+<stop offset="1" stop-color="#0073E6"/>
+</linearGradient>
+<clipPath id="clip0_6519_1357">
+<rect width="25" height="21" fill="white"/>
+</clipPath>
+</defs>
+</svg></div><div>Active MultiSite</div></a></li><li class="menu__li"><a href="/platform/global-benchmark" class="footer_link cc-small w-inline-block"><div class="w-embed"><svg width="1.4em" height="1.4em" viewBox="0 0 25 25" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g clip-path="url(#clip0_6519_1371)">
+<path d="M12.6895 17.251C17.2965 17.251 21.0312 13.5162 21.0312 8.90918C21.0312 4.30213 17.2965 0.567383 12.6895 0.567383C8.08241 0.567383 4.34766 4.30213 4.34766 8.90918C4.34766 13.5162 8.08241 17.251 12.6895 17.251Z" fill="url(#paint0_linear_6519_1371)" style="mix-blend-mode:multiply"/>
+<path d="M16.6582 24.4326C21.2653 24.4326 25 20.6979 25 16.0908C25 11.4838 21.2653 7.74902 16.6582 7.74902C12.0512 7.74902 8.31641 11.4838 8.31641 16.0908C8.31641 20.6979 12.0512 24.4326 16.6582 24.4326Z" fill="#105AE8"/>
+<path d="M8.3418 24.4326C12.9488 24.4326 16.6836 20.6979 16.6836 16.0908C16.6836 11.4838 12.9488 7.74902 8.3418 7.74902C3.73475 7.74902 0 11.4838 0 16.0908C0 20.6979 3.73475 24.4326 8.3418 24.4326Z" fill="url(#paint1_linear_6519_1371)" style="mix-blend-mode:multiply"/>
+<path d="M21.0303 8.90918C21.0303 8.93457 21.0303 8.96094 21.0293 8.98535C19.7578 8.20117 18.2607 7.74902 16.6572 7.74902C15.1436 7.74902 13.7236 8.15234 12.499 8.85742C11.2754 8.15137 9.85547 7.74902 8.34082 7.74902C6.82617 7.74902 5.5332 8.11719 4.34766 8.76562C4.4248 4.22559 8.12891 0.567383 12.6885 0.567383C17.248 0.567383 21.0303 4.30273 21.0303 8.90918Z" fill="url(#paint2_linear_6519_1371)"/>
+<path d="M12.5 23.3242C11.2764 24.0303 9.85645 24.4326 8.3418 24.4326C3.73535 24.4326 0 20.6973 0 16.0908C0 12.9307 1.75684 10.1816 4.34863 8.76562C4.34766 8.81348 4.34766 8.86133 4.34766 8.90918C4.34766 11.9131 5.93555 14.5459 8.31738 16.0137C8.31641 16.0391 8.31641 16.0654 8.31641 16.0908C8.31641 19.1836 10 21.8838 12.5 23.3242Z" fill="#9DE2FF"/>
+</g>
+<defs>
+<linearGradient id="paint0_linear_6519_1371" x1="4.34766" y1="8.90918" x2="21.0312" y2="8.90918" gradientUnits="userSpaceOnUse">
+<stop stop-color="#00299C"/>
+<stop offset="1" stop-color="#0073E6"/>
+</linearGradient>
+<linearGradient id="paint1_linear_6519_1371" x1="0" y1="16.0908" x2="16.6836" y2="16.0908" gradientUnits="userSpaceOnUse">
+<stop stop-color="#00299C"/>
+<stop offset="1" stop-color="#0073E6"/>
+</linearGradient>
+<linearGradient id="paint2_linear_6519_1371" x1="4.34766" y1="4.77637" x2="21.0303" y2="4.77637" gradientUnits="userSpaceOnUse">
+<stop stop-color="#3E9CF8"/>
+<stop offset="0.86" stop-color="#70D6F8"/>
+</linearGradient>
+<clipPath id="clip0_6519_1371">
+<rect width="25" height="25" fill="white"/>
+</clipPath>
+</defs>
+</svg></div><div>Global Benchmark</div></a></li></ul></div><div><ul role="list" class="footer__links vertical"><li class="menu__li"><a href="/resources" class="footer_link">Resources</a></li><li class="menu__li"><a href="/blog" class="footer_link cc-small">Blog</a></li><li class="menu__li"><a href="/resources" class="footer_link cc-small">Research</a></li></ul><div class="w-dyn-list"><div role="list" class="footer__links vertical w-dyn-items"><div role="listitem" class="menu__li w-dyn-item"><div class="code-embed w-embed"><a class="footer_link cc-small" href='/resources?type_equal=%5B"Case Study"%5D'>Case Studies</a></div><div class="code-embed w-condition-invisible w-embed"><a class="footer_link cc-small" href='/resources?type_equal=%5B"Case Study"%5D'>Case Study</a></div></div><div role="listitem" class="menu__li w-dyn-item"><div class="code-embed w-embed"><a class="footer_link cc-small" href='/resources?type_equal=%5B"Report"%5D'>Reports</a></div><div class="code-embed w-condition-invisible w-embed"><a class="footer_link cc-small" href='/resources?type_equal=%5B"Report"%5D'>Report</a></div></div><div role="listitem" class="menu__li w-dyn-item"><div class="code-embed w-embed"><a class="footer_link cc-small" href='/resources?type_equal=%5B"Playbook"%5D'>Playbooks</a></div><div class="code-embed w-condition-invisible w-embed"><a class="footer_link cc-small" href='/resources?type_equal=%5B"Playbook"%5D'>Playbook</a></div></div></div></div></div><div><ul role="list" class="footer__links vertical"><li class="menu__li"><a href="/resources" class="footer_link">Tools</a></li><li class="menu__li"><a href="/resources/global-benchmark-report-locked" class="footer_link cc-small">Global Interactive Report</a></li><li class="menu__li"><a href="https://ai-code-detector.io/?ref=WebsiteFooter" target="_blank" class="footer_link cc-small">AI Code Detector</a></li><li class="menu__li"><a href="https://ai-cost.blueoptima.com/?ref=WebsiteFooter" target="_blank" class="footer_link cc-small">AI Refactoring Cost</a></li><li class="menu__li"><a href="/resources/active-multisite/value-calculator" class="footer_link cc-small">Active MultiSite Value Calculator <span class="tag-span cc-primary-square u-medium">new</span></a></li></ul></div><div><ul role="list" class="footer__links vertical"><li class="menu__li"><a href="#" class="footer_link">Company</a></li><li class="menu__li"><a href="/company/about-us" class="footer_link cc-small">About</a></li><li class="menu__li"><a href="/company/careers" class="footer_link cc-small">Careers</a></li><li class="menu__li"><a href="/company/partner-enquiry" class="footer_link cc-small">Become a Partner</a></li><li class="menu__li"><a href="/company/contact-us" class="footer_link cc-small">Contact</a></li><li class="menu__li"><a href="/policies" class="footer_link cc-small">Policies</a></li></ul></div></div></div><div class="footer__lower-flex"><div class="footer__nav-left"><div class="footer__socmed-hold"><a href="https://www.linkedin.com/company/blueoptima/" target="_blank" class="social_link w-inline-block"><div class="w-embed"><svg width="1.8em" height="1.8em" viewBox="0 0 35 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M34.3555 19.6127V31.9922H27.0669V20.4457C27.0669 17.5416 26.0155 15.564 23.3752 15.564C21.3594 15.564 20.1657 16.8954 19.6361 18.1878C19.4464 18.6472 19.391 19.2934 19.391 19.9397V32H12.1025C12.1025 32 12.1974 12.4341 12.1025 10.4097H19.391V13.4696C19.3752 13.4929 19.3594 13.5163 19.3436 13.5397H19.391V13.4696C20.3634 11.9981 22.0867 9.90365 25.9602 9.90365C30.7586 9.89586 34.3555 12.9869 34.3555 19.6127ZM4.48195 0C1.98393 0 0.355469 1.61168 0.355469 3.72944C0.355469 5.80049 1.9365 7.45888 4.38709 7.45888H4.43452C6.97997 7.45888 8.561 5.80049 8.561 3.72944C8.50567 1.61168 6.97207 0 4.48195 0ZM0.790251 32H8.07879V10.4019H0.790251V32Z" fill="currentColor"/>
+</svg></div></a><a href="https://x.com/blueoptima" target="_blank" class="social_link w-inline-block"><div class="w-embed"><svg width="1.8em" height="1.8em" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M17.4701 12.7029L28.3982 0H25.8086L16.3199 11.0299L8.74116 0H0L11.4604 16.679L0 30H2.58984L12.6104 18.3522L20.614 30H29.3552L17.4699 12.7029H17.4706H17.4701ZM13.923 16.8258L12.7618 15.165L3.52284 1.94941H7.50043L14.9566 12.6148L16.1178 14.2755L25.8098 28.1389H21.8322L13.9233 16.8262V16.8255L13.923 16.8258Z" fill="currentColor"/>
+</svg></div></a></div><div class="footer_copyright"><div class="footer_cpyr-message">©<span>2026 BlueOptima.</span></div><ul role="list" class="footer_policy-ul w-list-unstyled"><li class="menu_li-small"><a href="https://app.drata.com/trust/9cbc43d7-0c38-11ee-865f-029d78a187d9" target="_blank" class="footer_privacy-link w-inline-block"><div>Trust Centre</div><div class="w-embed"><svg xmlns="http://www.w3.org/2000/svg" width="0.9em" height="0.9em" viewBox="0 0 20 19" fill="none">
+  <path d="M14.7051 13.8562L14.7051 4.75629L5.60517 4.7563" stroke="currentColor" stroke-width="2" stroke-linecap="square"/>
+  <line x1="14.5255" y1="4.8846" x2="5.19166" y2="14.2184" stroke="currentColor" stroke-width="2"/>
+</svg></div></a></li><li class="menu_li-small"><a href="/terms-and-conditions" target="_blank" class="footer_privacy-link w-inline-block"><div>Terms</div><div class="w-embed"><svg xmlns="http://www.w3.org/2000/svg" width="0.9em" height="0.9em" viewBox="0 0 20 19" fill="none">
+  <path d="M14.7051 13.8562L14.7051 4.75629L5.60517 4.7563" stroke="currentColor" stroke-width="2" stroke-linecap="square"/>
+  <line x1="14.5255" y1="4.8846" x2="5.19166" y2="14.2184" stroke="currentColor" stroke-width="2"/>
+</svg></div></a></li><li class="menu_li-small"><a href="/privacy" target="_blank" class="footer_privacy-link w-inline-block"><div>Privacy</div><div class="w-embed"><svg xmlns="http://www.w3.org/2000/svg" width="0.9em" height="0.9em" viewBox="0 0 20 19" fill="none">
+  <path d="M14.7051 13.8562L14.7051 4.75629L5.60517 4.7563" stroke="currentColor" stroke-width="2" stroke-linecap="square"/>
+  <line x1="14.5255" y1="4.8846" x2="5.19166" y2="14.2184" stroke="currentColor" stroke-width="2"/>
+</svg></div></a></li><li class="menu_li-small"><a href="/modern-slavery" target="_blank" class="footer_privacy-link w-inline-block"><div>Modern Slavery</div><div class="w-embed"><svg xmlns="http://www.w3.org/2000/svg" width="0.9em" height="0.9em" viewBox="0 0 20 19" fill="none">
+  <path d="M14.7051 13.8562L14.7051 4.75629L5.60517 4.7563" stroke="currentColor" stroke-width="2" stroke-linecap="square"/>
+  <line x1="14.5255" y1="4.8846" x2="5.19166" y2="14.2184" stroke="currentColor" stroke-width="2"/>
+</svg></div></a></li><li class="menu_li-small"><div fs-consent-element="open-preferences" class="footer_privacy-link"><div>Cookie Settings</div></div></li></ul></div></div><div class="footer__nav-right"><a href="https://app.drata.com/trust/9cbc43d7-0c38-11ee-865f-029d78a187d9" target="_blank" class="w-inline-block"><img src="https://cdn.prod.website-files.com/6810e237f744f9c0338e055e/685bdce83c156a51bf74ad0e_AICPA_BlueOptima_SOC_Logo.webp" loading="lazy" sizes="(max-width: 612px) 100vw, 612px" srcset="https://cdn.prod.website-files.com/6810e237f744f9c0338e055e/685bdce83c156a51bf74ad0e_AICPA_BlueOptima_SOC_Logo-p-500.webp 500w, https://cdn.prod.website-files.com/6810e237f744f9c0338e055e/685bdce83c156a51bf74ad0e_AICPA_BlueOptima_SOC_Logo.webp 612w" alt="" class="footer_soc2-logo"/></a></div></div></div><div class="footer_bottom-logo-hold"><a href="/2025-home" class="footer_cut-off w-nav-brand"><div class="footer_logo-bottom w-embed"><svg width="95vw" viewBox="0 0 1784 362" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M59.7358 24.8091V120.326L60.9731 119.269C69.7762 111.747 78.6877 105.629 87.7632 100.974C96.8379 96.3553 107.316 94.0328 119.226 94.0327C141.077 94.0327 157.987 102.384 169.986 119.143L170.553 119.948C182.619 137.288 188.691 161.362 188.691 192.257C188.691 222.279 181.178 246.573 166.212 265.212L165.495 266.095H165.494C150.051 284.853 130.99 294.226 108.213 294.226C98.6671 294.226 90.3689 293.121 83.3677 290.98H83.3667C76.3461 288.771 68.8434 285.402 60.8569 280.853L60.0132 280.373L59.7612 281.311L57.3325 290.362H1.14795V24.8091H59.7358ZM92.2241 139.264C87.096 139.264 82.0264 140.051 76.9644 141.565L75.9517 141.877C70.5501 143.598 65.2705 146.21 60.0679 149.699L59.7358 149.921V247.462L60.2085 247.65C64.2382 249.252 68.3445 250.382 72.5151 250.917V250.916C76.5854 251.505 80.6569 251.803 84.6694 251.803C99.4317 251.803 110.52 246.932 117.836 237.093C125.118 227.3 128.702 212.764 128.702 193.484C128.702 174.54 125.866 160.769 120.115 152.338L119.838 151.941V151.94L119.553 151.545C113.52 143.311 104.343 139.264 92.2241 139.264Z" stroke="currentColor" stroke-width="1.5"/>
+<path d="M259.543 24.8091V290.362H200.955V24.8091H259.543Z" stroke="currentColor" stroke-width="1.5"/>
+<path d="M333.478 99.2991V194.009C333.478 203.974 333.713 212.139 334.241 218.437C334.772 224.76 336.017 230.177 338.056 234.614V234.615C339.942 238.744 342.926 241.917 346.937 244.042V244.041C350.896 246.176 356.422 247.233 363.393 247.233C367.784 247.233 372.909 246.155 378.751 244.086L378.75 244.085C384.674 242.014 390.124 239.169 395.102 235.615L395.415 235.39V99.2991H454.003V290.362H395.415V268.19L394.184 269.221C384.115 277.651 374.884 284.035 366.441 288.497L365.626 288.924H365.625C357.082 293.363 346.843 295.633 334.928 295.633C316.248 295.633 301.753 289.848 291.247 278.34L290.75 277.788C280.203 265.916 274.89 247.971 274.89 223.88V99.2991H333.478Z" stroke="currentColor" stroke-width="1.5"/>
+<path d="M567.358 93.3269C596.343 93.327 618.134 101.008 632.821 116.251L633.515 116.983L633.517 116.985C648.278 132.676 655.685 155.243 655.685 184.818V205.675H523.51L523.562 206.473C524.134 215.226 525.931 222.585 529.027 228.629L529.331 229.21C532.607 235.34 536.902 240.181 542.336 243.823V243.824C547.576 247.395 553.696 250.008 560.633 251.549V251.55C567.605 253.146 575.161 253.911 583.347 253.911C590.426 253.911 597.336 253.144 604.187 251.549C611.021 249.957 617.277 247.895 622.952 245.293L622.951 245.292C627.889 243.061 632.488 240.705 636.677 238.106L636.677 238.107C640.793 235.59 644.148 233.393 646.78 231.424H652.172V279.884C649.881 280.785 647.68 281.659 645.576 282.502L639.169 285.086L639.163 285.088C635.367 286.659 630.279 288.243 623.833 289.83L622.525 290.147L622.511 290.15C616.389 291.734 610.113 293.013 603.677 293.984L602.388 294.174C595.468 295.163 587.071 295.634 577.139 295.634C541.389 295.634 513.962 287.257 494.743 270.564L493.834 269.762C474.64 252.541 464.978 227.995 464.978 196.002C464.978 164.707 474.005 139.842 491.941 121.206L491.94 121.205C509.862 102.649 535.004 93.3269 567.358 93.3269ZM562.793 130.129C550.803 130.129 541.389 133.694 534.603 140.967C527.837 148.153 524.1 157.937 523.386 170.192L523.341 170.986H598.17L598.149 170.216C597.807 157.701 594.97 147.952 589.602 141.122L589.075 140.47L589.074 140.469L588.521 139.828C582.715 133.307 574.108 130.129 562.793 130.129Z" stroke="currentColor" stroke-width="1.5"/>
+<path d="M767.92 92.9766C798.906 92.9766 822.901 101.782 840.064 119.254L840.876 120.093C858.107 138.137 866.79 162.938 866.79 194.54C866.79 226.082 858.162 250.824 840.997 268.862C823.777 286.895 799.514 295.983 767.92 295.983C737.058 295.983 713.059 287.178 695.838 269.7L695.022 268.861C677.737 250.822 669.055 226.082 669.055 194.54C669.055 162.7 677.739 137.842 695.021 119.92C712.298 102.005 736.566 92.9766 767.92 92.9766ZM767.92 134.699C762.46 134.699 757.453 135.525 753.02 137.204C748.75 138.799 744.84 141.763 741.276 146.054L740.568 146.929L740.562 146.938C737.308 151.204 734.601 156.912 732.574 164.03L732.178 165.474V165.475C730.104 173.346 729.044 183.137 729.044 194.891C729.044 206.694 730.042 216.258 732.003 223.545V223.544C733.83 230.41 736.233 235.96 739.139 240.275L739.727 241.122L739.729 241.126C743.028 245.68 747.114 248.993 752.107 251.097V251.098C757.015 253.188 762.503 254.262 768.451 254.262C773.057 254.262 777.754 253.311 782.534 251.48L783.491 251.103L783.494 251.102C788.429 249.071 792.431 246.068 795.469 242.045L795.76 241.653V241.652C799.169 236.963 801.78 231.446 803.656 225.023L804.021 223.727L804.023 223.721C805.859 216.718 806.796 207.098 806.796 194.891C806.796 183.848 805.915 174.537 804.084 167.022L803.904 166.301C802.016 158.624 799.345 152.496 795.934 147.831H795.933C792.359 142.937 788.212 139.505 783.554 137.565H783.555C778.996 135.647 773.742 134.699 767.92 134.699Z" stroke="currentColor" stroke-width="1.5"/>
+<path d="M995.6 93.6772C1017.45 93.6772 1034.36 102.141 1046.42 119.129L1046.99 119.945L1046.99 119.947C1059.17 137.521 1065.31 161.427 1065.31 191.902C1065.31 222.519 1057.49 247.165 1041.99 265.857C1026.43 284.557 1007.31 293.875 984.592 293.875C975.042 293.875 966.743 292.766 959.685 290.625H959.686C952.659 288.481 945.101 285.166 937.116 280.618L935.995 279.98V360.636H877.407V98.9487H935.995V119.908L937.229 118.86C945.757 111.626 954.445 105.663 963.286 101.065L964.142 100.624H964.144C973.157 96.0011 983.694 93.6773 995.6 93.6772ZM968.662 138.914C963.531 138.914 958.408 139.696 953.338 141.214L952.328 141.527C946.867 143.247 941.531 145.858 936.327 149.348L935.995 149.571V247.384L936.444 247.581C939.728 249.016 943.31 250.03 947.241 250.565V250.564C951.15 251.156 955.757 251.453 961.104 251.453C975.98 251.453 987.18 246.581 994.444 236.8C1001.73 227.071 1005.31 212.533 1005.31 193.194C1005.31 174.409 1002.38 160.573 996.454 151.946H996.455C990.489 143.207 981.147 138.914 968.662 138.914Z" stroke="currentColor" stroke-width="1.5"/>
+<path d="M1145.53 43.782V98.949H1203.5V139.264H1145.53V208.417C1145.53 213.515 1145.56 218.121 1145.62 222.233L1145.7 226.18V226.181C1145.82 231.295 1146.77 235.894 1148.5 240.025V240.026C1150.1 244.053 1152.96 247.317 1156.93 249.716L1157.32 249.945L1157.32 249.947C1161.59 252.384 1167.65 253.56 1175.5 253.56C1178.6 253.56 1182.57 252.924 1187.37 251.683L1188.34 251.427L1188.34 251.427C1193.41 250.058 1197.12 248.783 1199.29 247.583H1203.5V288.542C1197.6 290.109 1191.32 291.342 1184.73 292.236L1183.37 292.415L1183.36 292.416C1176.09 293.406 1167.1 293.876 1156.46 293.876C1132.44 293.876 1114.98 289.007 1103.96 279.416L1103.44 278.956V278.955C1092.48 269.085 1086.94 252.884 1086.94 230.088V139.264H1064.1V98.949H1086.94V43.782H1145.53Z" stroke="currentColor" stroke-width="1.5"/>
+<path d="M1276.45 98.9485V290.006H1217.86V98.9485H1276.45Z" stroke="currentColor" stroke-width="1.5"/>
+<path d="M1247.95 0.75C1268.54 0.750229 1285.22 17.4403 1285.22 38.0264C1285.22 58.6123 1268.54 75.3015 1247.95 75.3018C1227.36 75.3018 1210.67 58.6123 1210.67 38.0264C1210.67 17.4402 1227.36 0.75 1247.95 0.75Z" stroke="currentColor" stroke-width="1.5"/>
+<path d="M1532.02 93.6772C1540.97 93.6772 1548.92 94.9869 1556 97.645L1556.69 97.9058H1556.69C1563.71 100.645 1569.72 104.681 1574.65 110.062L1575.13 110.586L1575.13 110.593C1580.48 116.465 1584.48 123.432 1587.24 131.553L1587.5 132.343V132.344C1590.27 140.729 1591.66 151.77 1591.66 165.43V290.006H1530.77V194.595C1530.77 186.287 1530.63 179.093 1530.35 173.059L1530.22 170.544C1529.85 164 1528.81 158.575 1526.94 154.36H1526.94C1525.17 150.242 1522.37 147.126 1518.62 145.152L1518.25 144.964H1518.25C1514.33 143.019 1508.97 142.073 1502.11 142.073C1497.5 142.073 1493.01 142.974 1488.54 144.753L1487.64 145.121L1487.64 145.123C1482.97 147.138 1477.82 150.031 1472.32 153.682L1471.99 153.904V290.006H1411.09V194.595C1411.09 185.802 1410.93 178.237 1410.56 171.903L1410.48 170.653C1410.06 163.991 1408.95 158.57 1407.08 154.36C1405.25 150.11 1402.34 146.926 1398.4 144.964H1398.4C1394.54 143.018 1389.17 142.073 1382.43 142.073C1377.14 142.073 1372.05 143.276 1367.1 145.601C1362.14 147.9 1357.36 150.556 1352.65 153.681L1352.31 153.904V290.006H1291.42V98.9487H1352.31V121.104L1353.54 120.099C1363.72 111.748 1373.29 105.277 1382.23 100.621L1382.23 100.62C1391.17 95.9951 1401.21 93.6773 1412.35 93.6772C1424.45 93.6772 1435.08 96.4618 1444.2 101.945V101.944C1453.35 107.476 1460.31 115.724 1465.12 126.669L1465.53 127.619L1466.3 126.925C1477.88 116.515 1488.81 108.475 1499.1 102.799L1500.09 102.258L1500.09 102.255C1510.58 96.5133 1521.28 93.6773 1532.02 93.6772Z" stroke="currentColor" stroke-width="1.5"/>
+<path d="M1688.43 92.9766C1721.53 92.9766 1745.46 98.4807 1760.44 109.407C1775.37 120.304 1782.85 136.918 1782.85 159.458V290.007H1724.26V268.709L1723.03 269.748C1718.94 273.198 1715.25 276.301 1712.02 279.054C1709 281.537 1705.05 284.086 1700.06 286.645L1699.05 287.155C1694.09 289.612 1689.24 291.549 1684.5 292.929L1683.55 293.197L1683.55 293.198C1678.61 294.578 1671.6 295.277 1662.49 295.277C1645.96 295.277 1632.22 289.789 1621.26 278.815L1620.74 278.288L1620.74 278.287L1620.22 277.754C1609.47 266.516 1604.09 252.477 1604.09 235.475C1604.09 221.666 1606.77 210.496 1612.01 201.967L1612.52 201.149L1612.52 201.148C1617.94 192.711 1625.7 185.933 1635.83 180.882L1636.81 180.398L1636.82 180.396C1647.23 175.331 1659.62 171.728 1674.02 169.653L1675.42 169.457C1690.45 167.407 1706.59 165.827 1723.92 164.656L1724.61 164.609V162.856C1724.61 152.382 1720.84 144.85 1713.24 140.573L1712.5 140.17C1704.55 136.047 1692.69 133.993 1677.07 133.993C1670.35 133.993 1662.61 135.141 1653.86 137.414L1652.1 137.884C1642.69 140.458 1633.45 143.728 1624.44 147.699H1620.25V102.402C1625.83 100.849 1634.37 99.0061 1646 96.915L1648.45 96.4795H1648.45C1661.64 94.1444 1675.01 92.9766 1688.43 92.9766ZM1723.44 199.355C1713.37 200.406 1705.17 201.288 1698.95 202.05C1693.02 202.713 1687.24 204.057 1681.53 206.07L1680.38 206.481C1675.23 208.282 1671.16 211.049 1668.16 214.685L1667.88 215.039L1667.87 215.05C1664.87 218.959 1663.38 224.115 1663.38 230.438C1663.38 239.335 1665.66 245.721 1670.43 249.387L1670.9 249.733L1670.9 249.736C1675.95 253.256 1683.21 254.962 1692.71 254.962C1698.04 254.962 1703.47 253.708 1709 251.27C1714.53 248.828 1719.53 245.381 1724.04 240.988L1724.26 240.767V199.27L1723.44 199.355Z" stroke="currentColor" stroke-width="1.5"/>
+</svg>
+
+<style>
+.footer_cut-off:hover > div {
+	transform: translateY(-1em);
+}
+</style></div></a></div><div class="footer_gradient-overlay"></div><div class="w-embed"><style>
+.menu__li.w-variant-b85b0486-fe25-4962-e5de-125735535415 .footer_link  {
+	color: var(--_themes---colours--neutral-1);
+}
+.menu__li.w-variant-b85b0486-fe25-4962-e5de-125735535415 .footer_link:hover  {
+	color: var(--_themes---colours--neutral-1);
+}
+</style></div></footer>
+<!-- /LOCAL PREVIEW ONLY -->
+
+<!-- DEV PREVIEW ONLY: Webflow runtime for the nav dropdowns and mobile menu. Remove before publishing. -->
+<script src="https://d3e54v103j8qbb.cloudfront.net/js/jquery-3.5.1.min.dc5e7f18c8.js?site=6810e237f744f9c0338e055e" integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0=" crossorigin="anonymous"></script>
+<script src="https://cdn.prod.website-files.com/6810e237f744f9c0338e055e/js/blueoptima.schunk.36b8fb49256177c8.js" integrity="sha384-4abIlA5/v7XaW1HMXKBgnUuhnjBYJ/Z9C1OSg4OhmVw9O3QeHJ/qJqFBERCDPv7G" crossorigin="anonymous"></script>
+<script src="https://cdn.prod.website-files.com/6810e237f744f9c0338e055e/js/blueoptima.schunk.3f3b044c2bc81320.js" integrity="sha384-seOhzNBVCAHm634499g19n1vT1ehgM9VDFca0Guk+G2Rlg1xUjtEW1gHkMHETl9H" crossorigin="anonymous"></script>
+<script src="https://cdn.prod.website-files.com/6810e237f744f9c0338e055e/js/blueoptima.7770cf95.7c75bb81390c937c.js" integrity="sha384-O44/KyRHXbngXIbsncUGe5fm8igNX1RaOa4LA9dj5h9sij/wnN0WiH+mcN04FyOU" crossorigin="anonymous"></script>
+<!-- /DEV PREVIEW ONLY -->
+<script src="js/bare-config.js"></script>
+<script src="js/bare-benchmark.js"></script>
+</body></html>
