@@ -1,3 +1,5 @@
+![BlueOptima BARE Benchmark](GitHub_bare-2026.png)
+
 # BARE benchmark
 
 The LLM Rankings page on [blueoptima.com](https://www.blueoptima.com/resources/llm-rankings). It shows how AI models perform at refactoring real production code.

@@ -11,8 +11,8 @@
   --bo-primary: #105AE8;
   --bo-light: #3E9CF8;
   --bo-navy: #10288B;
-  --bo-coral: #FC6151;
-  --bo-purple: #AD7BFF;
+  --bo-coral: var(--_themes---coral--500, #FC6151);
+  --bo-purple: var(--_themes---purple--500, #AD7BFF);
   --bo-grey-1: #F2F3F6;
   --bo-grey-2: #E7EBED;
 
@@ -328,9 +328,9 @@ html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; scroll-padding-t
 
 /* ===================== Native section extras =====================
    The only rules for those sections that Webflow's style panel can't hold. */
-.bare_move.is-primary .bare_move-item::marker { color: var(--bo-primary); }
-.bare_move.is-coral .bare_move-item::marker { color: var(--bo-coral); }
-.bare_move.is-purple .bare_move-item::marker { color: var(--bo-purple); }
+.bare_move.is-primary li::marker { color: var(--bo-primary); }
+.bare_move.is-coral li::marker { color: var(--bo-coral); }
+.bare_move.is-purple li::marker { color: var(--bo-purple); }
 
 /* ===================== Responsive ===================== */
 @media (max-width: 960px) {
